@@ -5,7 +5,7 @@
 > You can also move music **to and from SoundCloud**.
 > And there will be a **Premium** plan you can pay for, which lets you keep more playlists copied and run more moves at once. The free plan stays free.
 
-**Status:** spec only — no code yet. Needs v1.1 ([08-spec-v1.1.md](08-spec-v1.1.md)) first: Auto-Sync reuses *add to an existing playlist + skip duplicates* and `transfer_selections`.
+**Status:** ✅ built — migration `0003_v1_2.sql`, `src/routes/syncs.ts`, `src/routes/billing.ts`, `src/adapters/soundcloud.ts`, dashboard; tests in `test/sync.test.ts`, `test/billing.test.ts`, `test/adapters.test.ts`. SoundCloud and Stripe still need real accounts to verify. Needs v1.1 ([08-spec-v1.1.md](08-spec-v1.1.md)) first: Auto-Sync reuses *add to an existing playlist + skip duplicates* and `transfer_selections`.
 **Covers:** FR-06 (recurring sync), SoundCloud, and the Premium plan from the PRD.
 
 ---
@@ -80,7 +80,7 @@ When a sync is created, `sync_seen` is filled with the keys of every song in the
 4. Otherwise create a normal `transfer_jobs` row (`sync_id` set, title "Sync: <name>") and one `transfer_selections` row with `target_playlist_id = dest_playlist_id`, then start the DO.
 5. The engine runs `read → match → existing → write` as in v1.1, with one addition: in the `read` phase of a sync job, before `insertTracks`, it looks up the page's keys (`cacheKey()`) in `sync_seen` with one `json_each` SELECT and leaves those songs out. Only new songs are stored and matched, which keeps searches — and YouTube quota — tiny.
 6. On finish, insert the new keys into `sync_seen` (matched, not found and skipped alike — a song is tried **once**; the user can fix it on the results page), set `last_run_at`, `last_added`, `last_job_id`, `next_run_at = now + 24h`.
-7. If a run adds 0 songs, delete its `transfer_jobs` row so the dashboard isn't filled with empty runs.
+7. If a run finds no new songs at all, delete its `transfer_jobs` row so the dashboard isn't filled with empty runs. (A run that found new songs but couldn't add them is kept, so they can be fixed on its results page.)
 
 ### Errors
 - `AuthError` → sync becomes `NEEDS_USER` with "Reconnect <app> to keep syncing". Reconnecting the app sets that user's `NEEDS_USER` syncs back to `ACTIVE`.
@@ -185,7 +185,7 @@ CREATE TABLE billing_events (
   received_at INTEGER NOT NULL
 );
 ```
-A user counts as Premium when `plan = 'premium' AND plan_until > now`. One helper `isPremium(user)` is used by the limit checks in `createJob`, `POST /api/syncs` and the file upload check. If Premium ends with more than 1 sync, the extra syncs are set to `PAUSED` (oldest one stays active) — never deleted.
+A user counts as Premium when `plan = 'premium' AND plan_until > now`. One helper `isPremium(user)` (in `src/plans.ts`, next to the `LIMITS` table) is used by the limit checks in `createJob`, `POST /api/syncs` and the file upload check. If Premium ends with more than 1 sync, the extra syncs are set to `PAUSED` (oldest one stays active) — never deleted.
 
 ### Secrets & setup
 `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`. Billing buttons only appear when these exist. Test everything in Stripe **test mode** first.

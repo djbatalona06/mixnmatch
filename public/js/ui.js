@@ -7,6 +7,7 @@ export const PLATFORM_INFO = {
   tidal: { name: "TIDAL" },
   deezer: { name: "Deezer" },
   youtube: { name: "YouTube Music" },
+  soundcloud: { name: "SoundCloud" },
   mock: { name: "Demo Music" },
   file: { name: "File upload" },
 };

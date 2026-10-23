@@ -32,8 +32,13 @@ mix n match never hosts, streams, downloads or copies audio. It only reads and w
 | CSV export guards against spreadsheet formula injection | `public/js/formats.js` |
 | Audit log of sign-ins, connections, transfers, deletions | `audit_log` table |
 | Every data query scoped to the signed-in user | routes |
+| Fix-it: another user's song id → 404 (never 403); manual picks never enter the shared `match_cache`; search limited to 30/min per user | `src/routes/fix.ts` |
+| Stripe webhook: HMAC-SHA256 signature over `t.body`, constant-time compare, 5-minute window, each event handled once (`billing_events`) | `src/routes/billing.ts` |
+| No card data stored: Stripe hosts Checkout and the Customer Portal; we keep only the customer id and paid-until date | `src/routes/billing.ts` |
+| "Delete my account" deletes the Stripe customer first (cancels Premium), then syncs and all other rows | `src/index.ts` |
 
 ## Open items before launch
 - Privacy policy contact address and a data-request process.
 - Spotify, Google and TIDAL app reviews may require a privacy policy URL and a demo video.
 - Rotate `TOKEN_KEY` procedure (re-encrypt all rows) — not built yet.
+- **Before charging real money:** lawyer review of Premium terms (price, renewal, cancellation, refunds, taxes) and of Stripe as a processor in the privacy policy.

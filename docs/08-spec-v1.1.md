@@ -6,7 +6,7 @@
 > You can also **add songs to a playlist you already have**, and mix n match will not add a song that is already there.
 > And if a move is taking too long, you can **stop it**, and later **try again** without making a mess.
 
-**Status:** spec only — no code yet. Builds on v1 (merged to `main`).
+**Status:** ✅ built — migration `0002_v1_1.sql`, `src/routes/fix.ts`, `src/routes/jobs.ts`, `src/jobs/`, results + wizard pages; tests in `test/fix.test.ts`, `test/existing.test.ts`, `test/cancel-retry.test.ts`. Builds on v1.
 **Covers:** FR-07 (fix songs by hand), plus two new items: *add to an existing playlist* and *cancel + retry*.
 **Next:** [09-spec-v1.2.md](09-spec-v1.2.md) (Auto-Sync, SoundCloud, Premium).
 

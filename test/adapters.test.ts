@@ -5,6 +5,7 @@ import { createDeezerAdapter } from "../src/adapters/deezer";
 import { createSpotifyAdapter } from "../src/adapters/spotify";
 import { createTidalAdapter, isoDurationToMs, tracksFromDocument } from "../src/adapters/tidal";
 import { createYouTubeAdapter, YT_COST } from "../src/adapters/youtube";
+import { createSoundCloudAdapter } from "../src/adapters/soundcloud";
 import { AuthError, QuotaError, RateLimitError } from "../src/http";
 
 function fakeFetch(...bodies: unknown[]) {
@@ -123,5 +124,54 @@ describe("YouTube", () => {
       { id: "v1", title: "Bohemian Rhapsody", artist: "Queen", durationMs: undefined },
     ]);
     expect(urlOf(fetch).searchParams.get("videoCategoryId")).toBe("10");
+  });
+});
+
+describe("SoundCloud", () => {
+  const sc = (fetch: any) => createSoundCloudAdapter("cid", "secret", { fetch });
+
+  it("builds a PKCE login URL and sends the client secret when swapping the code", async () => {
+    const url = new URL(sc(fakeFetch({})).getAuthUrl({ state: "s", codeChallenge: "c", redirectUri: "https://mm.test/cb" }));
+    expect(url.origin + url.pathname).toBe("https://secure.soundcloud.com/authorize");
+    expect(url.searchParams.get("code_challenge_method")).toBe("S256");
+    const fetch = fakeFetch({ access_token: "a", refresh_token: "r", expires_in: 3600 });
+    const tokens = await sc(fetch).exchangeCode("code", "verifier", "https://mm.test/cb");
+    expect(tokens.refreshToken).toBe("r");
+    const body = new URLSearchParams(fetch.mock.calls[0][1].body);
+    expect(body.get("client_secret")).toBe("secret");
+    expect(body.get("code_verifier")).toBe("verifier");
+  });
+
+  it("reads pages of tracks, prefers the label's artist name, and only follows SoundCloud's own next links", async () => {
+    const fetch = fakeFetch({
+      collection: [
+        { id: 1, title: "Song", user: { username: "uploader" }, publisher_metadata: { artist: "Real Artist", isrc: "USX" }, duration: 1000 },
+        { id: 2, title: "Remix", user: { username: "dj" } },
+      ],
+      next_href: "https://api.soundcloud.com/me/likes/tracks?cursor=2",
+    });
+    const page = await sc(fetch).getSavedTracks("tok");
+    expect(fetch.mock.calls[0][1].headers.Authorization).toBe("OAuth tok");
+    expect(page.items.map((t) => [t.id, t.artist, t.isrc])).toEqual([
+      ["1", "Real Artist", "USX"],
+      ["2", "dj", undefined],
+    ]);
+    expect(page.next).toContain("cursor=2");
+    const evil = await sc(fakeFetch({ collection: [], next_href: "https://api.soundcloud.com.evil.test/x" })).getSavedTracks("tok");
+    expect(evil.next).toBeUndefined();
+  });
+
+  it("adds songs by saving the full list back, keeping old songs and skipping duplicates", async () => {
+    const fetch = fakeFetch({ tracks: [{ id: 1 }, { id: 2 }] }, {});
+    await sc(fetch).addTracksToPlaylist("tok", "77", ["2", "3"]);
+    expect(fetch.mock.calls[1][1].method).toBe("PUT");
+    expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({ playlist: { tracks: [{ id: 1 }, { id: 2 }, { id: 3 }] } });
+  });
+
+  it("maps errors like the other adapters", async () => {
+    const unauthorized = vi.fn(async () => new Response("", { status: 401 }));
+    await expect(sc(unauthorized).getProfile("tok")).rejects.toBeInstanceOf(AuthError);
+    const busy = vi.fn(async () => new Response("", { status: 429, headers: { "Retry-After": "60" } }));
+    await expect(sc(busy).getProfile("tok")).rejects.toBeInstanceOf(RateLimitError);
   });
 });

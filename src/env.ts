@@ -14,6 +14,12 @@ export interface Env {
   DEEZER_SECRET?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  SOUNDCLOUD_CLIENT_ID?: string;
+  SOUNDCLOUD_CLIENT_SECRET?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PRICE_MONTHLY?: string; // Stripe price id, e.g. price_123
+  STRIPE_PRICE_YEARLY?: string;
 
   // Plain settings
   EMAIL_FROM?: string;
