@@ -1,0 +1,23 @@
+{
+  "name": "mixnmatch",
+  "version": "0.1.0",
+  "private": true,
+  "description": "mix n match: move your playlists and liked songs between music services.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:migrate:local": "wrangler d1 migrations apply mixnmatch --local",
+    "db:migrate:remote": "wrangler d1 migrations apply mixnmatch --remote",
+    "deploy": "wrangler d1 migrations apply mixnmatch --remote && wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "smoke": "node test/smoke.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261023.1",
+    "playwright-core": "^1.64.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7",
+    "wrangler": "^4.152.0"
+  }
+}

@@ -1,0 +1,15 @@
+# Copy this file to .dev.vars for local testing. Never commit .dev.vars.
+# Make a key with:  node -e "console.log(crypto.randomBytes(32).toString('base64'))"
+TOKEN_KEY=
+DEV_MODE=1
+ENABLE_MOCK=1
+
+# Fill in the services you have developer apps for (leave the rest empty):
+SPOTIFY_CLIENT_ID=
+TIDAL_CLIENT_ID=
+TIDAL_CLIENT_SECRET=
+DEEZER_APP_ID=
+DEEZER_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+RESEND_API_KEY=
