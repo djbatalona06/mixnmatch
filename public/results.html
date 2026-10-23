@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transfer results · mix n match</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script type="module" src="/js/results.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="logo" href="/"><img class="logo-mark" src="/favicon.svg" alt="">mix n match</a>
+      <nav class="nav"></nav>
+    </div>
+  </header>
+
+  <main class="stack">
+    <div class="row space">
+      <div>
+        <h1 id="title">Transfer</h1>
+        <p class="muted" id="route"></p>
+      </div>
+      <span class="pill" id="status-pill">Loading…</span>
+    </div>
+
+    <div class="card stack">
+      <div class="row space"><strong id="phase">Getting ready…</strong><span class="muted" id="percent">0%</span></div>
+      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="bar"><span></span></div>
+      <p class="muted small hidden" id="message"></p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" id="n-total">0</div><div class="label">Songs found</div></div>
+      <div class="stat ok"><div class="num" id="n-matched">0</div><div class="label">Matched &amp; added</div></div>
+      <div class="stat warn"><div class="num" id="n-low">0</div><div class="label">Need a look (not added)</div></div>
+      <div class="stat bad"><div class="num" id="n-failed">0</div><div class="label">Not found</div></div>
+    </div>
+
+    <section class="section">
+      <div class="row space">
+        <h2>Every song</h2>
+        <button class="btn btn-small" id="download-missing">Download songs that need a look (CSV)</button>
+      </div>
+      <div class="tabs" role="tablist" id="tabs">
+        <button role="tab" data-status="" aria-selected="true">All</button>
+        <button role="tab" data-status="MATCHED" aria-selected="false">Matched</button>
+        <button role="tab" data-status="LOW_CONFIDENCE" aria-selected="false">Need a look</button>
+        <button role="tab" data-status="FAILED" aria-selected="false">Not found</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Original song</th><th>Best match</th><th>Result</th></tr></thead>
+          <tbody id="items"></tbody>
+        </table>
+      </div>
+      <div class="row section"><button class="btn hidden" id="more">Show more</button></div>
+    </section>
+
+    <div class="row"><a class="btn" href="/dashboard">Back to dashboard</a><a class="btn btn-ghost" href="/transfer">Start another transfer</a></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="inner">
+      <span>mix n match</span>
+      <span class="row"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></span>
+    </div>
+  </footer>
+</body>
+</html>

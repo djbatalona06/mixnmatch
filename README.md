@@ -1,1 +1,160 @@
-# mixnmatch
+# mix n match
+
+mix n match moves your songs from one music app to another.
+
+Say you use Spotify, but you want to switch to TIDAL. You have lots of playlists. You do not want to find every song again by hand. mix n match does it for you.
+
+It works with **Spotify**, **TIDAL**, **Deezer**, and **YouTube Music**.
+It can also save your playlists in a file, so you have a backup.
+
+---
+
+## What it does
+
+1. **You sign in with your email.** We send you a link. You click it. That's it. No password.
+2. **You connect your music apps.** You log in on the music app's own page. We never see your password.
+3. **You pick playlists.** You can peek inside each one first.
+4. **We move the songs.** We look for each song in the new app.
+5. **You see what happened.** Every song gets a label:
+   - ✅ **Matched** — we found it and added it.
+   - ⚠️ **Need a look** — we were not sure, so we did not add it. You can check it.
+   - ❌ **Not found** — the new app does not have it.
+
+---
+
+## How we find each song
+
+We try three ways, in this order:
+
+1. **The song's ID code.** Most songs have a special code, like a barcode. It is called an **ISRC**. If both apps know the code, it is a sure match.
+2. **The same name and singer.** We clean up the name first. So "Hello (Remastered)" and "Hello" count as the same song.
+3. **A name that is almost the same.** If the names are very close, we call it a match. If they are only a little close, we mark it "Need a look."
+
+---
+
+## What is in this folder
+
+| Folder | What is inside |
+|---|---|
+| `docs/` | The plans for the app. Start here to learn how it was designed. |
+| `public/` | The web pages people see. |
+| `src/` | The code that runs on the server. |
+| `migrations/` | The setup for the database (where we keep data). |
+| `test/` | Checks that make sure the code works. |
+
+---
+
+## Try it on your own computer
+
+You need **Node.js** installed. Then type these lines, one at a time:
+
+```bash
+npm install
+cp .dev.vars.example .dev.vars
+```
+
+Now make a secret key. Type this:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+Copy what it prints. Open the file `.dev.vars`. Paste it after `TOKEN_KEY=`.
+
+Then type:
+
+```bash
+npm run db:migrate:local
+npm run dev
+```
+
+Open **http://localhost:8787** in your web browser.
+
+**Good to know:** On your computer, you do not need real music accounts.
+- The sign-in link shows up on the screen. No email is sent.
+- There is a pretend music app called **Demo Music**. You can test everything with it.
+
+---
+
+## Run the checks
+
+```bash
+npm test
+```
+This runs quick checks on the code.
+
+```bash
+npm run typecheck
+```
+This looks for typing mistakes in the code.
+
+```bash
+npm run smoke
+```
+This opens a robot web browser and clicks through the whole app.
+It needs `npm run dev` to be running in another window.
+
+---
+
+## Put it on the internet
+
+mix n match runs on **Cloudflare**. The free plan is enough.
+
+**Step 1.** Log in to Cloudflare:
+```bash
+npx wrangler login
+```
+
+**Step 2.** Make the database:
+```bash
+npx wrangler d1 create mixnmatch
+```
+It prints a `database_id`. Copy it into the file `wrangler.jsonc`.
+
+**Step 3.** Save your secret key (make one the same way as above):
+```bash
+npx wrangler secret put TOKEN_KEY
+```
+
+**Step 4.** Send it live:
+```bash
+npm run deploy
+```
+
+---
+
+## Turn on each music app
+
+Each music app needs its own "developer app." This gives mix n match permission to talk to it.
+
+For each one:
+1. Go to the website in the table.
+2. Make a new app.
+3. Where it asks for a **redirect URL**, put the link from the table. Change `<your-site>` to your real web address.
+4. It gives you keys. Save each key with `npx wrangler secret put NAME`.
+
+| Music app | Where to go | Redirect URL | Keys to save |
+|---|---|---|---|
+| Spotify | developer.spotify.com/dashboard | `https://<your-site>/api/callback/spotify` | `SPOTIFY_CLIENT_ID` |
+| TIDAL | developer.tidal.com | `https://<your-site>/api/callback/tidal` | `TIDAL_CLIENT_ID`, `TIDAL_CLIENT_SECRET` |
+| Deezer | developers.deezer.com/myapps | `https://<your-site>/api/callback/deezer` | `DEEZER_APP_ID`, `DEEZER_SECRET` |
+| YouTube | console.cloud.google.com (turn on "YouTube Data API v3") | `https://<your-site>/api/callback/youtube` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| Email | resend.com (you need your own web address) | — | `RESEND_API_KEY` |
+
+---
+
+## Limits to know about
+
+- **Spotify:** In test mode, only **5 people** can use your app. The app owner needs **Spotify Premium**.
+- **YouTube:** Google only lets us add about **60 songs a day** to YouTube. This is for everyone together. Big moves pause and finish the next day.
+- **Email:** Sign-in emails only reach *you* until you own a web address.
+
+---
+
+## Keeping you safe
+
+- We never see or save your music app passwords.
+- The keys we get from music apps are **locked** (encrypted) before we save them.
+- We only move song **names**. We never copy the music itself.
+- Old song lists are deleted after 30 days.
+- You can delete your account and all your data with one button.

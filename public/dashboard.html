@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · mix n match</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script type="module" src="/js/dashboard.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="logo" href="/"><img class="logo-mark" src="/favicon.svg" alt="">mix n match</a>
+      <nav class="nav"></nav>
+    </div>
+  </header>
+
+  <main>
+    <div id="flash" class="notice hidden" role="status"></div>
+
+    <section class="row space">
+      <div>
+        <h1>Your music</h1>
+        <p class="muted">Connect the apps you use, then move playlists between them.</p>
+      </div>
+      <div class="row">
+        <a class="btn btn-primary btn-big" id="start-transfer" href="/transfer">Start a transfer</a>
+        <a class="btn btn-big" href="/export">Back up to a file</a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Music services</h2>
+      <div class="grid" id="services"><p class="muted"><span class="spinner"></span> Loading…</p></div>
+    </section>
+
+    <section class="section">
+      <h2>Recent transfers</h2>
+      <div id="jobs"><p class="muted">No transfers yet.</p></div>
+    </section>
+
+    <section class="section card stack">
+      <h2>Delete my account</h2>
+      <p class="muted">Removes your account, every connected service and all transfer history from mix n match. Your playlists inside Spotify, TIDAL, etc. are not touched.</p>
+      <div><button class="btn btn-danger" id="delete-account">Delete my account and data</button></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="inner">
+      <span>mix n match</span>
+      <span class="row"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></span>
+    </div>
+  </footer>
+</body>
+</html>
