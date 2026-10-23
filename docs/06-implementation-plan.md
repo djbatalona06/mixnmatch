@@ -24,12 +24,23 @@
 | 2.7 | Buy/attach a domain, verify it in Resend, set `RESEND_API_KEY` + `EMAIL_FROM`, set `DEV_MODE=0` | Owner |
 | 2.8 | Have a lawyer review privacy + terms; add a contact email | Owner |
 
-## Phase 3 — Better results
-- In-app "fix it" screen for *Need a look* songs (search the destination, pick the right one) — FR-07
-- Per-user country code for TIDAL (currently `US`)
-- Spotify extended-quota application; Google YouTube quota increase request
+## Phase 3 — Better results (v1.1) → full spec: [08-spec-v1.1.md](08-spec-v1.1.md)
+| # | Task | Spec section |
+|---|---|---|
+| 3.1 | Groundwork: `transfer_selections` table (migration `0002_v1_1.sql`), new values `SKIPPED` / `manual` / `CANCELLED` / `written = 2` | Shared groundwork |
+| 3.2 | Cancel + Retry (no second playlist, no re-reading songs) | Feature 3 |
+| 3.3 | Add to an existing playlist + skip duplicates | Feature 2 |
+| 3.4 | In-app Fix-it screen for *Need a look* / *Not found* songs — FR-07 | Feature 1 |
+| 3.5 | Per-user country code for TIDAL (currently `US`) | — (small, not in spec) |
+| 3.6 | Spotify extended-quota application; Google YouTube quota increase request | — (owner) |
 
-## Phase 4 — Grow
-- Recurring Sync (Cron Trigger + diff of playlists) — FR-06
-- Premium plan (Stripe) — likely needs Workers Paid ($5/mo) for higher limits
+## Phase 4 — Grow (v1.2) → full spec: [09-spec-v1.2.md](09-spec-v1.2.md)
+| # | Task | Spec section |
+|---|---|---|
+| 4.1 | Auto-Sync: one-way, add-only, once a day (hourly cron + `syncs` / `sync_seen`) — FR-06 | Feature 4 |
+| 4.2 | Premium plan (Stripe Checkout + Customer Portal + signed webhook) | Feature 6 |
+| 4.3 | SoundCloud adapter (or file-only if SoundCloud won't approve a new app) | Feature 5 |
+
+## Later
+- Two-way sync and mirroring removals
 - Apple Music (needs Apple Developer Program, $99/yr)
