@@ -22,6 +22,11 @@ function setup(spec: Partial<JobSpec> = {}) {
       "INSERT INTO transfer_jobs (id, user_id, source, dest, title, selections, status, created_at, updated_at) VALUES (?, 'u1', ?, ?, 't', '[]', 'QUEUED', 0, 0)",
     )
     .run(full.jobId, full.source, full.dest);
+  full.selections.forEach((s, i) =>
+    db.raw
+      .prepare("INSERT INTO transfer_selections (job_id, sel_index, kind, name, source_id, read_done) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(full.jobId, i, s.kind, s.name, s.id ?? null, full.source === "file" ? 1 : 0),
+  );
   return { db, spec: full };
 }
 
@@ -165,6 +170,24 @@ describe("transfer engine", () => {
       maxSearchesPerStep = Math.max(maxSearchesPerStep, search.mock.calls.length - before);
     }
     expect(maxSearchesPerStep).toBeLessThanOrEqual(4);
+  });
+});
+
+describe("jobs started before v1.1 (no selection rows)", () => {
+  it("still move every selection, one after another", async () => {
+    const { db, spec } = setup({
+      selections: [
+        { kind: "playlist", id: "chill", name: "Chill" },
+        { kind: "liked", name: "Liked Songs" },
+      ],
+    });
+    db.raw.prepare("DELETE FROM transfer_selections").run();
+    const dest = createMockAdapter();
+    const save = vi.spyOn(dest, "saveTracks");
+    const { finished } = await runToEnd(spec, { db, source: createMockAdapter(), dest, withSourceToken: direct, withDestToken: direct });
+    expect(finished).toBe(true);
+    expect(save).toHaveBeenCalled(); // the second selection (Liked Songs) was reached
+    expect((db.raw.prepare("SELECT COUNT(*) AS n FROM transfer_items WHERE sel_index = 1").get() as any).n).toBe(60);
   });
 });
 

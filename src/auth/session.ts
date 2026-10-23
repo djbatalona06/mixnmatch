@@ -10,6 +10,8 @@ const SESSION_DAYS = 30;
 export interface User {
   id: string;
   email: string;
+  plan?: string; // free, premium
+  plan_until?: number | null;
 }
 
 export function readCookie(request: Request, name: string): string | null {
@@ -38,7 +40,7 @@ export async function getUser(env: Env, request: Request): Promise<User | null> 
   const id = readCookie(request, SESSION_COOKIE);
   if (!id) return null;
   return env.DB.prepare(
-    `SELECT users.id AS id, users.email AS email FROM sessions
+    `SELECT users.id AS id, users.email AS email, users.plan AS plan, users.plan_until AS plan_until FROM sessions
      JOIN users ON users.id = sessions.user_id
      WHERE sessions.id_hash = ?1 AND sessions.expires_at > ?2`,
   )

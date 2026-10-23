@@ -4,7 +4,7 @@ mix n match moves your songs from one music app to another.
 
 Say you use Spotify, but you want to switch to TIDAL. You have lots of playlists. You do not want to find every song again by hand. mix n match does it for you.
 
-It works with **Spotify**, **TIDAL**, **Deezer**, and **YouTube Music**.
+It works with **Spotify**, **TIDAL**, **Deezer**, **YouTube Music**, and **SoundCloud**.
 It can also save your playlists in a file, so you have a backup.
 
 ---
@@ -19,6 +19,14 @@ It can also save your playlists in a file, so you have a backup.
    - ✅ **Matched** — we found it and added it.
    - ⚠️ **Need a look** — we were not sure, so we did not add it. You can check it.
    - ❌ **Not found** — the new app does not have it.
+6. **You fix the unsure ones.** Tap **Fix** on a song. Pick the right one from a short list. Or tap **Skip**.
+7. **Changed your mind?** Tap **Stop**. Songs already moved stay. Later, tap **Try again**. It picks up where it stopped. It never makes a second playlist.
+
+## Extra things it can do
+
+- **Add to a playlist you already have.** Songs that are already in it are skipped. Nothing goes in twice.
+- **Keep a playlist copied.** Tap **Keep in sync** after a move. Once a day, new songs get copied too. It only adds songs. It never deletes any.
+- **Premium (optional).** Pay to keep more playlists copied and run more moves at once. The free plan stays free. Stripe handles the payment, so we never see your card.
 
 ---
 
@@ -139,7 +147,18 @@ For each one:
 | TIDAL | developer.tidal.com | `https://<your-site>/api/callback/tidal` | `TIDAL_CLIENT_ID`, `TIDAL_CLIENT_SECRET` |
 | Deezer | developers.deezer.com/myapps | `https://<your-site>/api/callback/deezer` | `DEEZER_APP_ID`, `DEEZER_SECRET` |
 | YouTube | console.cloud.google.com (turn on "YouTube Data API v3") | `https://<your-site>/api/callback/youtube` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| SoundCloud | soundcloud.com/you/apps (may need approval) | `https://<your-site>/api/callback/soundcloud` | `SOUNDCLOUD_CLIENT_ID`, `SOUNDCLOUD_CLIENT_SECRET` |
 | Email | resend.com (you need your own web address) | — | `RESEND_API_KEY` |
+
+### Turn on Premium (optional)
+
+1. Make a Stripe account. Stay in **test mode** first.
+2. Make a product with a monthly price (and a yearly one if you want). Copy each **price id** (it starts with `price_`).
+3. Add a webhook pointing to `https://<your-site>/api/billing/webhook`. Pick these events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`.
+4. Turn on the **Customer Portal** in Stripe's settings.
+5. Save the keys: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, and (optional) `STRIPE_PRICE_YEARLY`.
+
+Premium only shows up once these keys are saved. Have a lawyer check the terms before you charge real money.
 
 ---
 

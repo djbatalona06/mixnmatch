@@ -15,7 +15,11 @@ const state = {
   nextCursor: undefined,
   selected: new Set(), // playlist ids (or LIKED)
   file: null, // { name, playlists: [{ name, tracks }] }
+  destPlaylists: null, // destination playlists for "Add to": null = not asked yet, undefined = loading, [] = loaded
+  destCursor: undefined,
+  targets: new Map(), // source playlist id -> destination playlist id ("" = new playlist)
 };
+const MORE = "__more__";
 
 const connected = () => state.me.connections.map((c) => c.platform);
 
@@ -61,6 +65,11 @@ function renderDests() {
     $("#dest-tiles").replaceChildren(
       ...options.map((id) =>
         tile(id, platformName(id), "Songs will be added here", state.dest === id, () => {
+          if (state.dest !== id) {
+            state.destPlaylists = null;
+            state.destCursor = undefined;
+            state.targets.clear();
+          }
           state.dest = id;
           renderDests();
           updateButtons();
@@ -224,6 +233,41 @@ function chosen() {
   return state.playlists.filter((p) => state.selected.has(p.id));
 }
 
+async function loadDestPlaylists() {
+  try {
+    const q = state.destCursor ? `?cursor=${encodeURIComponent(state.destCursor)}` : "";
+    const page = await api(`/api/library/${state.dest}/playlists${q}`);
+    state.destPlaylists = [...(state.destPlaylists ?? []), ...page.items];
+    state.destCursor = page.next;
+  } catch {
+    state.destPlaylists = state.destPlaylists ?? [];
+    state.destCursor = undefined;
+  }
+  renderSummary();
+}
+
+/** "New playlist" or "Add to: <one of your playlists on the new app>". */
+function targetPicker(item) {
+  const select = el(
+    "select",
+    { class: "select-small", "aria-label": `Where should “${item.name}” go?` },
+    el("option", { value: "" }, "New playlist"),
+    state.destPlaylists === null ? el("option", { value: "", disabled: true }, "Loading your playlists…") : null,
+    (state.destPlaylists ?? []).map((p) => el("option", { value: p.id }, `Add to: ${p.name}`)),
+    state.destCursor ? el("option", { value: MORE }, "Show more playlists…") : null,
+  );
+  select.value = state.targets.get(item.id) ?? "";
+  select.addEventListener("change", () => {
+    if (select.value === MORE) {
+      select.value = state.targets.get(item.id) ?? "";
+      loadDestPlaylists();
+      return;
+    }
+    state.targets.set(item.id, select.value);
+  });
+  return select;
+}
+
 function renderSummary() {
   const items = chosen();
   const songs = items.reduce((n, p) => n + (p.trackCount ?? 0), 0);
@@ -238,9 +282,19 @@ function renderSummary() {
       el("strong", {}, platformName(state.dest)),
     ),
     el("p", {}, `${plural(items.length, "list")}${songs ? `, about ${plural(songs, "song")}` : ""}:`),
-    el("ul", {}, items.slice(0, 12).map((p) => el("li", {}, p.name))),
-    items.length > 12 ? el("p", { class: "muted" }, `…and ${items.length - 12} more`) : null,
+    el(
+      "ul",
+      { class: "review-list" },
+      items.map((p) =>
+        el("li", {}, el("span", {}, p.name), p.id === LIKED ? el("span", { class: "muted small" }, "Saved to your liked songs") : targetPicker(p)),
+      ),
+    ),
+    el("p", { class: "muted small" }, "Adding to a playlist you already have? Songs that are already in it are skipped, so nothing is added twice."),
   );
+  if (state.destPlaylists === null && items.some((p) => p.id !== LIKED)) {
+    state.destPlaylists = undefined; // loading
+    loadDestPlaylists();
+  }
 }
 
 async function start() {
@@ -251,9 +305,14 @@ async function start() {
   try {
     const body = { source: state.source, dest: state.dest };
     if (state.source === "file") {
-      body.file = { name: state.file.name, playlists: chosen().map((p) => state.file.playlists[Number(p.id)]) };
+      body.file = {
+        name: state.file.name,
+        playlists: chosen().map((p) => ({ ...state.file.playlists[Number(p.id)], targetPlaylistId: state.targets.get(p.id) || undefined })),
+      };
     } else {
-      body.selections = chosen().map((p) => (p.id === LIKED ? { kind: "liked" } : { kind: "playlist", id: p.id, name: p.name }));
+      body.selections = chosen().map((p) =>
+        p.id === LIKED ? { kind: "liked" } : { kind: "playlist", id: p.id, name: p.name, targetPlaylistId: state.targets.get(p.id) || undefined },
+      );
     }
     const { id } = await api("/api/jobs", { method: "POST", body });
     location.href = `/results?job=${id}`;

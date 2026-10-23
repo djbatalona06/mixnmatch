@@ -33,8 +33,9 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TransferJob"] }],
 
-  // Daily clean-up of old logins and old transfer details (03:17 UTC).
-  "triggers": { "crons": ["17 3 * * *"] },
+  // Daily clean-up of old logins and old transfer details (03:17 UTC),
+  // and an hourly check for Auto-Syncs that are due (2 of the 5 crons the free plan allows).
+  "triggers": { "crons": ["17 3 * * *", "7 * * * *"] },
 
   "vars": {
     "EMAIL_FROM": "mix n match <onboarding@resend.dev>",

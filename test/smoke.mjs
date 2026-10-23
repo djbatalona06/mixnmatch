@@ -5,7 +5,7 @@ import { chromium } from "playwright-core";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:8787";
 const SHOTS = process.env.SHOT_DIR ?? "test-results";
-const executablePath = process.env.CHROME_PATH ?? "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
+const executablePath = process.env.CHROME_PATH ?? "/opt/pw-browsers/chromium";
 
 const browser = await chromium.launch({ executablePath });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -71,6 +71,76 @@ try {
   await page.locator('#tabs button[data-status="LOW_CONFIDENCE"]').click();
   await page.locator("#items tr").first().waitFor();
   await shot("4-results");
+  const resultsUrl = page.url();
+
+  step("v1.1 fix a 'need a look' song by hand (search, then Use this)");
+  await page.locator("#items .fix-btn").first().click();
+  await page.locator("#fix[open]").waitFor();
+  if ((await page.inputValue("#fix-q")).length < 3) throw new Error("search box should be pre-filled");
+  await page.locator("#fix-results .pick").first().waitFor();
+  await shot("4a-fix-dialog");
+  await page.locator("#fix-results .pick").first().click();
+  await page.locator("#fix:not([open])").waitFor({ state: "attached" });
+  await page.waitForFunction((before) => Number(document.querySelector("#n-low").textContent) === before - 1, low);
+  await shot("4b-fixed");
+
+  step("v1.1 skip a song");
+  await page.locator("#items .fix-btn").first().click();
+  await page.click("#fix-skip");
+  await page.locator('#items .pill:text-is("Skipped")').first().waitFor();
+
+  step("v1.1 try again (also the 'need a look' songs) — no songs read twice");
+  await page.check("#include-unsure");
+  await page.click("#retry");
+  await page.getByText("All done!").waitFor({ timeout: 120_000 });
+  await page.waitForFunction(() => document.querySelector("#status-pill").textContent === "Done");
+  const totalAfter = Number((await page.textContent("#n-total")).replace(/,/g, ""));
+  if (totalAfter !== 1060) throw new Error(`retry should not read songs again (total ${totalAfter})`);
+
+  step("v1.2 keep Road Trip in sync");
+  await page.getByRole("button", { name: /Keep “Road Trip” in sync/ }).click();
+  await page.getByRole("button", { name: /is kept in sync/ }).waitFor();
+  await page.goto(`${BASE}/dashboard`);
+  await page.locator("#syncs td", { hasText: "Road Trip" }).waitFor();
+  await page.locator("#syncs").getByRole("button", { name: "Pause" }).click();
+  await page.locator("#syncs").getByRole("button", { name: "Resume" }).waitFor();
+  await shot("4c-dashboard-syncs");
+
+  step("v1.1 add to an existing playlist (wizard Review step)");
+  await page.goto(`${BASE}/transfer`);
+  await page.locator('#source-tiles [data-id="mock"]').click();
+  await page.click("#next");
+  await page.locator('#dest-tiles [data-id="mock"]').click();
+  await page.click("#next");
+  await page.locator(".cover-card", { hasText: "Chill Evenings" }).click();
+  await page.click("#next");
+  const picker = page.locator("#summary select");
+  await picker.locator("option", { hasText: "Add to: Gym Mix" }).waitFor({ state: "attached" });
+  await picker.selectOption({ label: "Add to: Gym Mix" });
+  await shot("4d-review-add-to");
+  await page.click("#next");
+  await page.waitForURL(/\/results\?job=/);
+  await page.getByText("All done!").waitFor({ timeout: 60_000 });
+  await page.locator("#n-already").waitFor();
+
+  step("v1.1 stop a running transfer");
+  await page.goto(`${BASE}/transfer`);
+  await page.locator('#source-tiles [data-id="mock"]').click();
+  await page.click("#next");
+  await page.locator('#dest-tiles [data-id="mock"]').click();
+  await page.click("#next");
+  await page.locator(".cover-card", { hasText: "Road Trip" }).click();
+  await page.click("#next");
+  await page.click("#next");
+  await page.waitForURL(/\/results\?job=/);
+  await page.locator("#stop:not(.hidden)").waitFor();
+  page.once("dialog", (d) => d.accept());
+  await page.click("#stop");
+  await page.waitForFunction(() => document.querySelector("#status-pill").textContent === "Stopped");
+  await page.getByText(/already added will stay|Stopped before any songs/).waitFor();
+  await page.locator("#retry-box:not(.hidden)").waitFor();
+  await shot("4e-stopped");
+  await page.goto(resultsUrl);
 
   step("upload a CSV file as the source");
   await page.goto(`${BASE}/transfer`);
@@ -99,7 +169,7 @@ try {
 
   step("phone-width layout has no sideways scrolling");
   await page.setViewportSize({ width: 375, height: 800 });
-  for (const path of ["/", "/dashboard", "/transfer", "/export"]) {
+  for (const path of ["/", "/dashboard", "/transfer", "/export", new URL(resultsUrl).pathname + new URL(resultsUrl).search]) {
     await page.goto(BASE + path);
     await page.waitForLoadState("networkidle");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

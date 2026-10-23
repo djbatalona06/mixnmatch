@@ -21,11 +21,13 @@ There is no "export to another app" button between music services. People who sw
 | FR-04 | Move my Liked Songs, keeping their order | My favourites come with me | ✅ v1 |
 | FR-08 | Download my playlists as JSPF or CSV, and upload such a file as a source | I have a backup that works even when an app blocks access | ✅ v1 |
 | FR-05 | Copy my profile name/picture | — | ❌ Not possible: none of the APIs allow writing profile data |
-| FR-07 | Fix "Need a look" songs by hand inside the app | — | ⏭ Phase 2 (v1: downloadable CSV list) |
-| FR-06 | Recurring sync | — | ⏭ Phase 2 |
-| — | Paid Premium tier | — | ⏭ Phase 2 |
+| FR-07 | Fix "Need a look" songs by hand inside the app | Every song ends up right | ✅ v1.1 ([spec](08-spec-v1.1.md)) |
+| — | Add to a playlist I already have, never twice; Stop + Try again | No mess when merging or retrying | ✅ v1.1 |
+| FR-06 | Keep a playlist copied once a day (one-way, add-only) | My two apps stay in step | ✅ v1.2 ([spec](09-spec-v1.2.md)) |
+| — | SoundCloud as source and destination | — | ✅ v1.2 (verify with a real app) |
+| — | Paid Premium tier (Stripe) | — | ✅ v1.2 (needs a Stripe account) |
 
-**Services in v1:** Spotify, TIDAL, Deezer, YouTube Music (official YouTube Data API), plus file import/export.
+**Services:** Spotify, TIDAL, Deezer, YouTube Music (official YouTube Data API), SoundCloud (v1.2), plus file import/export.
 
 ## Non-functional requirements
 - **Speed:** a 1,000-song playlist finishes in under 5 minutes when the services are not rate-limiting us (YouTube excepted — see quota).

@@ -23,6 +23,7 @@
   --tidal: #f4f4f7;
   --deezer: #a238ff;
   --youtube: #ff3347;
+  --soundcloud: #ff7a1a;
   --mock: #c8f04a;
   --file: #7aa7ff;
 
@@ -107,7 +108,7 @@ p { margin: 0 0 12px; }
 
 /* ---------- forms ---------- */
 label { display: block; font-weight: 600; margin-bottom: 6px; }
-input[type="email"], input[type="text"], input[type="file"], select {
+input[type="email"], input[type="text"], input[type="search"], input[type="file"], select {
   width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit;
 }
@@ -223,6 +224,16 @@ dialog .dialog-body { padding: 8px 20px 20px; }
 .song-list li { padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; }
 .song-list li .pos { color: var(--muted); width: 2.5em; flex: none; text-align: right; }
 
+/* fix-it dialog */
+#fix-form { flex-wrap: nowrap; }
+#fix-form input { flex: 1; }
+.pick { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; }
+.pick .sub { color: var(--muted); font-size: 0.85rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+.select-small { width: auto; padding: 6px 10px; font-size: 0.9rem; }
+.review-list { list-style: none; padding: 0; margin: 0; }
+.review-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+
 .prose { max-width: 720px; }
 .prose h2 { margin-top: 32px; }
 .prose ul { padding-left: 20px; }
@@ -236,6 +247,7 @@ dialog .dialog-body { padding: 8px 20px 20px; }
 .c-tidal { --c: var(--tidal); }
 .c-deezer { --c: var(--deezer); }
 .c-youtube { --c: var(--youtube); }
+.c-soundcloud { --c: var(--soundcloud); }
 .c-mock { --c: var(--mock); }
 .c-file { --c: var(--file); }
 .chip { display: flex; align-items: center; gap: 10px; }

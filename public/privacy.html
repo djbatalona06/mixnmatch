@@ -26,6 +26,8 @@
       <li><strong>Access keys for the music apps you connect.</strong> These let us read and create playlists for you. They are encrypted (AES-256-GCM) before they are saved, and the encryption key is stored separately.</li>
       <li><strong>Transfer results</strong>: song titles, artists and match results, so you can review them. The song list of each transfer is deleted after 30 days.</li>
       <li><strong>A security log</strong> of sign-ins, connections and transfers. The IP address in it is removed after 30 days.</li>
+      <li><strong>Syncs you set up</strong>: which playlist is kept copied where, and a short fingerprint of each song already copied (so it is never copied twice). Deleted when you delete the sync.</li>
+      <li><strong>If you buy Premium</strong>: your Stripe customer number and the date your paid period ends. Never your card details — Stripe handles those.</li>
     </ul>
 
     <h2>What we never do</h2>
@@ -39,14 +41,15 @@
     <h2>Your controls</h2>
     <ul>
       <li><strong>Disconnect</strong> any app on your dashboard: its access key is deleted at once. You can also remove mix n match from the app's own settings.</li>
-      <li><strong>Delete your account</strong> on your dashboard: your email, keys and transfer history are removed.</li>
+      <li><strong>Delete your account</strong> on your dashboard: your email, keys, syncs and transfer history are removed, and any Premium plan is cancelled.</li>
     </ul>
 
     <h2>Who helps us run mix n match</h2>
     <ul>
       <li>Cloudflare hosts the website and database.</li>
       <li>Resend delivers sign-in emails.</li>
-      <li>The music apps you connect (Spotify, TIDAL, Deezer, Google/YouTube) receive requests made on your behalf.</li>
+      <li>Stripe handles Premium payments (only if you buy Premium).</li>
+      <li>The music apps you connect (Spotify, TIDAL, Deezer, Google/YouTube, SoundCloud) receive requests made on your behalf.</li>
     </ul>
 
     <h2>Contact</h2>

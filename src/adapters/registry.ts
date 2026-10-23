@@ -3,6 +3,7 @@ import type { Env } from "../env";
 import { QuotaError, type FetchFn } from "../http";
 import { createDeezerAdapter } from "./deezer";
 import { createMockAdapter } from "./mock";
+import { createSoundCloudAdapter } from "./soundcloud";
 import { createSpotifyAdapter } from "./spotify";
 import { createTidalAdapter } from "./tidal";
 import type { Platform, PlatformAdapter } from "./types";
@@ -13,6 +14,7 @@ export const PLATFORMS: { id: Platform; name: string; isConfigured: (env: Env) =
   { id: "tidal", name: "TIDAL", isConfigured: (e) => !!e.TIDAL_CLIENT_ID },
   { id: "deezer", name: "Deezer", isConfigured: (e) => !!(e.DEEZER_APP_ID && e.DEEZER_SECRET) },
   { id: "youtube", name: "YouTube Music", isConfigured: (e) => !!(e.GOOGLE_CLIENT_ID && e.GOOGLE_CLIENT_SECRET) },
+  { id: "soundcloud", name: "SoundCloud", isConfigured: (e) => !!(e.SOUNDCLOUD_CLIENT_ID && e.SOUNDCLOUD_CLIENT_SECRET) },
   { id: "mock", name: "Demo Music", isConfigured: (e) => e.ENABLE_MOCK === "1" },
 ];
 
@@ -21,6 +23,10 @@ export const YOUTUBE_DAILY_BUDGET = 9000;
 
 export function isPlatform(value: string): value is Platform {
   return PLATFORMS.some((p) => p.id === value);
+}
+
+export function platformName(id: string): string {
+  return PLATFORMS.find((p) => p.id === id)?.name ?? id;
 }
 
 export function platformList(env: Env) {
@@ -64,6 +70,8 @@ export function getAdapter(env: Env, platform: Platform, fetchFn: FetchFn = (u, 
         fetch: fetchFn,
         spendQuota: (units) => spendQuota(env.DB, "youtube", units, YOUTUBE_DAILY_BUDGET),
       });
+    case "soundcloud":
+      return createSoundCloudAdapter(env.SOUNDCLOUD_CLIENT_ID!, env.SOUNDCLOUD_CLIENT_SECRET!, { fetch: fetchFn });
     case "mock":
       return createMockAdapter();
   }

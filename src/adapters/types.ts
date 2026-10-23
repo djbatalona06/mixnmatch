@@ -2,7 +2,7 @@
 // so the rest of mix n match never needs to know which service it is talking to.
 import type { FetchFn } from "../http";
 
-export type Platform = "spotify" | "tidal" | "deezer" | "youtube" | "mock";
+export type Platform = "spotify" | "tidal" | "deezer" | "youtube" | "soundcloud" | "mock";
 
 export interface Track {
   id?: string; // the service's own id (or URI) for this song

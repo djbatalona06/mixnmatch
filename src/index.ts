@@ -7,7 +7,11 @@ import { deleteConnection, listConnections, saveConnection, withToken } from "./
 import { codeChallengeS256, createCodeVerifier, randomToken } from "./crypto";
 import type { Env } from "./env";
 import { ApiError, AuthError, QuotaError, RateLimitError } from "./http";
-import { createJob, getJob, listJobItems, listJobs } from "./routes/jobs";
+import { isPremium, limitsFor } from "./plans";
+import { billingEnabled, deleteStripeCustomer, handleWebhook, openPortal, startCheckout } from "./routes/billing";
+import { fixItem, searchForItem, skipItem } from "./routes/fix";
+import { cancelJob, createJob, getJob, listJobItems, listJobs, retryJob } from "./routes/jobs";
+import { createSync, deleteSync, listSyncs, reactivateSyncs, runDueSyncs, updateSync } from "./routes/syncs";
 import { audit, clientIp, HttpError, json, readJson, redirect, requireSameOrigin } from "./web";
 
 export { TransferJob } from "./jobs/transfer-job";
@@ -19,10 +23,15 @@ function platformParam(value: string): Platform {
   return value;
 }
 
+const JOB = "([0-9a-f-]{36})";
+const SYNC_CRON = "7 * * * *";
+
 async function handleApi(request: Request, env: Env, url: URL): Promise<Response> {
-  requireSameOrigin(request);
   const path = url.pathname.replace(/\/+$/, "");
   const method = request.method;
+  // Stripe calls this itself (no cookie, no X-Requested-With); it is checked by signature instead.
+  if (path === "/api/billing/webhook" && method === "POST") return handleWebhook(env, request);
+  requireSameOrigin(request);
   const ip = clientIp(request);
   let m: RegExpMatchArray | null;
 
@@ -51,7 +60,15 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
   const user = await requireUser(env, request);
 
   if (path === "/api/me" && method === "GET") {
-    return json({ email: user.email, connections: await listConnections(env, user.id), platforms: platformList(env) });
+    return json({
+      email: user.email,
+      connections: await listConnections(env, user.id),
+      platforms: platformList(env),
+      plan: isPremium(user) ? "premium" : "free",
+      planUntil: isPremium(user) ? user.plan_until : null,
+      limits: limitsFor(user),
+      billing: billingEnabled(env) ? { yearly: !!env.STRIPE_PRICE_YEARLY } : null,
+    });
   }
   if (path === "/api/me" && method === "DELETE") {
     await deleteAccount(env, user, ip);
@@ -104,13 +121,48 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
 
   // ---------- Transfers ----------
   if (path === "/api/jobs" && method === "POST") {
-    const response = await createJob(env, user, await readJson(request, 2 * 1024 * 1024));
+    const response = await createJob(env, user, await readJson(request, limitsFor(user).bodyBytes));
     await audit(env, user.id, "transfer_start", null, ip);
     return response;
   }
   if (path === "/api/jobs" && method === "GET") return listJobs(env, user);
-  if ((m = path.match(/^\/api\/jobs\/([0-9a-f-]{36})$/)) && method === "GET") return getJob(env, user, m[1]);
-  if ((m = path.match(/^\/api\/jobs\/([0-9a-f-]{36})\/items$/)) && method === "GET") return listJobItems(env, user, m[1], url);
+  if ((m = path.match(new RegExp(`^/api/jobs/${JOB}$`))) && method === "GET") return getJob(env, user, m[1]);
+  if ((m = path.match(new RegExp(`^/api/jobs/${JOB}/items$`))) && method === "GET") return listJobItems(env, user, m[1], url);
+  if ((m = path.match(new RegExp(`^/api/jobs/${JOB}/cancel$`))) && method === "POST") {
+    await audit(env, user.id, "transfer_cancel", m[1], ip);
+    return cancelJob(env, user, m[1]);
+  }
+  if ((m = path.match(new RegExp(`^/api/jobs/${JOB}/retry$`))) && method === "POST") {
+    await audit(env, user.id, "transfer_retry", m[1], ip);
+    return retryJob(env, user, m[1], await readJson(request));
+  }
+
+  // ---------- Fix-it screen ----------
+  if ((m = path.match(new RegExp(`^/api/jobs/${JOB}/items/(\\d{1,12})/(search|fix|skip)$`)))) {
+    const [, jobId, itemId, action] = m;
+    if (action === "search" && method === "GET") return searchForItem(env, user, jobId, Number(itemId), url);
+    if (action === "fix" && method === "POST") return fixItem(env, user, jobId, Number(itemId), await readJson(request));
+    if (action === "skip" && method === "POST") return skipItem(env, user, jobId, Number(itemId));
+  }
+
+  // ---------- Auto-Sync ----------
+  if (path === "/api/syncs" && method === "GET") return listSyncs(env, user);
+  if (path === "/api/syncs" && method === "POST") {
+    const response = await createSync(env, user, await readJson(request));
+    await audit(env, user.id, "sync_create", null, ip);
+    return response;
+  }
+  if ((m = path.match(new RegExp(`^/api/syncs/${JOB}$`)))) {
+    if (method === "PATCH") return updateSync(env, user, m[1], await readJson(request));
+    if (method === "DELETE") {
+      await audit(env, user.id, "sync_delete", m[1], ip);
+      return deleteSync(env, user, m[1]);
+    }
+  }
+
+  // ---------- Premium ----------
+  if (path === "/api/billing/checkout" && method === "POST") return startCheckout(env, user, await readJson(request), url.origin);
+  if (path === "/api/billing/portal" && method === "POST") return openPortal(env, user, url.origin);
 
   throw new HttpError(404, "Not found");
 }
@@ -133,6 +185,7 @@ async function finishConnect(env: Env, user: User, platform: Platform, url: URL,
     const tokens = await adapter.exchangeCode(code, saved.code_verifier, `${url.origin}/api/callback/${platform}`);
     const profile = await adapter.getProfile(tokens.accessToken).catch(() => undefined);
     await saveConnection(env, user.id, platform, tokens, profile);
+    await reactivateSyncs(env, user.id, platform);
     await audit(env, user.id, "connect", platform, ip);
     return back(`connected=${platform}`);
   } catch (err) {
@@ -142,9 +195,14 @@ async function finishConnect(env: Env, user: User, platform: Platform, url: URL,
 }
 
 async function deleteAccount(env: Env, user: User, ip: string | null): Promise<void> {
+  // Cancel Premium first, so nobody keeps paying for a deleted account.
+  await deleteStripeCustomer(env, user.id);
   // Child rows are removed by ON DELETE CASCADE; we delete them explicitly too, to be safe.
   await env.DB.batch([
+    env.DB.prepare("DELETE FROM sync_seen WHERE sync_id IN (SELECT id FROM syncs WHERE user_id = ?1)").bind(user.id),
+    env.DB.prepare("DELETE FROM syncs WHERE user_id = ?1").bind(user.id),
     env.DB.prepare("DELETE FROM transfer_items WHERE job_id IN (SELECT id FROM transfer_jobs WHERE user_id = ?1)").bind(user.id),
+    env.DB.prepare("DELETE FROM transfer_selections WHERE job_id IN (SELECT id FROM transfer_jobs WHERE user_id = ?1)").bind(user.id),
     env.DB.prepare("DELETE FROM transfer_jobs WHERE user_id = ?1").bind(user.id),
     env.DB.prepare("DELETE FROM connections WHERE user_id = ?1").bind(user.id),
     env.DB.prepare("DELETE FROM oauth_states WHERE user_id = ?1").bind(user.id),
@@ -174,7 +232,7 @@ export async function cleanup(env: Env, now = Date.now()): Promise<void> {
     env.DB.prepare("DELETE FROM sessions WHERE expires_at < ?1").bind(now),
     env.DB.prepare("DELETE FROM oauth_states WHERE expires_at < ?1").bind(now),
     env.DB.prepare(
-      "DELETE FROM transfer_items WHERE job_id IN (SELECT id FROM transfer_jobs WHERE created_at < ?1 AND status IN ('DONE','FAILED'))",
+      "DELETE FROM transfer_items WHERE job_id IN (SELECT id FROM transfer_jobs WHERE created_at < ?1 AND status IN ('DONE','FAILED','CANCELLED'))",
     ).bind(now - 30 * day),
     env.DB.prepare("UPDATE audit_log SET ip = NULL WHERE at < ?1").bind(now - 30 * day),
     env.DB.prepare("DELETE FROM audit_log WHERE at < ?1").bind(now - 365 * day),
@@ -198,7 +256,7 @@ export default {
     }
   },
 
-  async scheduled(_event, env, ctx): Promise<void> {
-    ctx.waitUntil(cleanup(env));
+  async scheduled(event, env, ctx): Promise<void> {
+    ctx.waitUntil(event.cron === SYNC_CRON ? runDueSyncs(env).then(() => undefined) : cleanup(env));
   },
 } satisfies ExportedHandler<Env>;
