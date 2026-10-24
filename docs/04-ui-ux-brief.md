@@ -1,29 +1,30 @@
 # 04 — UI / UX Brief
 
-**Feel:** dark, minimal, music-y. Like Spotify meets Linear. Calm background, one loud colour.
+**Feel:** dark luxury, minimal, music-y. Near-black surfaces, one warm amber accent. Updated for the installable app — see [10-spec-app.md](10-spec-app.md).
 
-## Tokens (all in `public/css/styles.css` → `:root`)
+## Tokens (all in `app/tailwind.config.js`)
 | Token | Value | Use |
 |---|---|---|
-| `--bg` | `#0b0b0f` | Page background |
-| `--surface` / `--surface-2` | `#15151c` / `#1d1d27` | Cards, inputs |
-| `--border` | `#2a2a36` | Lines |
-| `--text` / `--muted` | `#f4f4f7` / `#9a9aab` | Text |
-| `--accent` | `#c8f04a` (lime) | The *only* bright colour: main buttons, progress, selection |
-| `--ok` / `--warn` / `--bad` | green / amber / red | Matched / Need a look / Not found |
-| Service colours | `--spotify`, `--tidal`, `--deezer`, `--youtube`, `--file` | Small dots only, via `.c-<service>` classes |
+| `bg` | `#0a0a0a` | Page background |
+| `surface` / `raised` | `#141414` / `#1a1a1a` | Cards, inputs |
+| `line` | `#262626` | Lines |
+| `fg` / `muted` | `#f5f5f5` / `#a3a3a3` | Text |
+| `accent` | `#f59e0b` (amber) | The *only* bright colour: main buttons, progress, selection, focus |
+| `ok` / `warn` / `bad` | `#10b981` / `#f59e0b` / `#f87171` | Matched / Need a look / Not found |
+| Service colours | `app/src/lib/platforms.ts` | Small dots only |
 
-Fonts: **Space Grotesk** (headings), **Inter** (text), from Google Fonts.
+Font: **Inter**, bundled with the app (works offline, no outside font server).
+Shapes: cards `rounded-xl`, buttons and pills `rounded-full`.
 
 ## Rules
-- One primary (lime) button per screen.
-- Big square cover art for playlists; selected = lime border + check.
+- One primary (amber) button per screen.
+- Big square cover art for playlists; selected = amber border + check.
 - Every song result has a word *and* a colour (never colour alone).
 - Plain words: "Need a look", not "LOW_CONFIDENCE".
+- Phones: bottom tab bar, safe areas (notch / home bar) respected, taps at least 40–44 px, no double-tap zoom.
 - Works at phone width (375 px) with no sideways scrolling — checked by the smoke test.
-- Keyboard: tiles and cover cards work with Tab + Space/Enter; visible lime focus ring.
-- Respects "reduce motion".
-- No inline styles or scripts in HTML (the security policy blocks them).
+- Keyboard: tiles and cover cards work with Tab + Space/Enter; visible amber focus ring.
+- No inline scripts in HTML (the security policy blocks them); `index.html` holds only HTML.
 
-## Components
-`.btn` (+ `-primary`, `-ghost`, `-danger`, `-small`, `-big`), `.card`, `.tile` (wizard choice), `.cover-card` (playlist), `.stepper`, `.progress`, `.stat`, `.pill`, `.tabs`, `.notice`, `.toast`, `<dialog>` (song peek).
+## Components (`app/src/components/`)
+`Button` / `buttonClass` (primary, default, ghost, danger; small, normal, big), `Card`, `Pill`, `Notice`, `PlatformDot`, `Spinner`, `PageTitle`, `CoverCard` (playlist), `Dialog` (native `<dialog>`: song peek, fix a song), `InstallCard` / `InstallBanner`, and the frame in `chrome.tsx` (header, tabs, offline bar, toasts).

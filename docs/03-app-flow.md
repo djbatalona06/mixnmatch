@@ -1,15 +1,22 @@
 # 03 — App Flow
 
-## Pages
-| URL | File | Who can see it |
+## Screens
+One app (`app/`). Every address loads the same app; React Router shows the right screen. The old page addresses still work.
+
+| URL | Screen (`app/src/pages/…`) | Who can see it |
 |---|---|---|
-| `/` | `public/index.html` | Everyone |
-| `/login` | `public/login.html` | Everyone |
-| `/dashboard` | `public/dashboard.html` | Signed in |
-| `/transfer` | `public/transfer.html` | Signed in |
-| `/results?job=…` | `public/results.html` | Signed in, owner of the job |
-| `/export` | `public/export.html` | Signed in |
-| `/privacy`, `/terms` | `public/privacy.html`, `public/terms.html` | Everyone |
+| `/` | `Landing.tsx` | Everyone |
+| `/login` | `Login.tsx` | Everyone |
+| `/dashboard` | `Dashboard.tsx` (Home tab) | Signed in |
+| `/transfer` | `Transfer.tsx` (Move tab) | Signed in |
+| `/results?job=…` | `Results.tsx` | Signed in, owner of the job |
+| `/syncs` | `Syncs.tsx` (Syncs tab) | Signed in |
+| `/account` | `Account.tsx` (Account tab: plan, install, sign out, delete) | Signed in |
+| `/export` | `Export.tsx` | Signed in |
+| `/privacy`, `/terms` | `Legal.tsx` | Everyone |
+| anything else | `NotFound.tsx` | Everyone |
+
+Phones get a bottom tab bar (Home · Move · Syncs · Account); bigger screens get the same tabs at the top.
 
 ## Map
 ```

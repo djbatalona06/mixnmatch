@@ -1,6 +1,7 @@
-// End-to-end smoke test: drives a real browser through the whole app against `wrangler dev`.
+// End-to-end smoke test: drives a real browser through the whole app against `wrangler dev`,
+// including the installable-app parts (manifest, icons, service worker, opening offline).
 // Needs: wrangler dev running with DEV_MODE=1 and ENABLE_MOCK=1 (see .dev.vars.example).
-// Run:   npm run dev   (in one terminal)   then   npm run smoke
+// Run:   npm run dev   (in one terminal; it builds the app first)   then   npm run smoke
 import { chromium } from "playwright-core";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:8787";
@@ -8,13 +9,15 @@ const SHOTS = process.env.SHOT_DIR ?? "test-results";
 const executablePath = process.env.CHROME_PATH ?? "/opt/pw-browsers/chromium";
 
 const browser = await chromium.launch({ executablePath });
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+const page = await context.newPage();
 const errors = [];
+let offline = false;
 page.on("pageerror", (e) => errors.push(e.message));
-// The login page checks "am I signed in?" first; a 401 there is expected.
+// The login page checks "am I signed in?" first; a 401 there is expected. So are failed requests while offline.
 page.on("console", (m) => {
   const expected401 = m.text().includes("401") && page.url().includes("/login");
-  if (m.type() === "error" && !m.text().includes("fonts.g") && !expected401) errors.push(`${page.url()}: ${m.text()}`);
+  if (m.type() === "error" && !expected401 && !offline) errors.push(`${page.url()}: ${m.text()}`);
 });
 
 const step = (name) => console.log(`• ${name}`);
@@ -26,6 +29,23 @@ try {
   await page.getByText("Take your music").waitFor();
   await shot("1-landing");
 
+  step("installable app: manifest, icons, service worker");
+  const manifest = await (await page.request.get(`${BASE}/manifest.webmanifest`)).json();
+  if (manifest.display !== "standalone" || manifest.start_url !== "/dashboard") throw new Error("manifest should open the app standalone at /dashboard");
+  for (const size of ["192x192", "512x512"]) {
+    if (!manifest.icons.some((i) => i.sizes === size)) throw new Error(`manifest is missing a ${size} icon`);
+  }
+  if (!manifest.icons.some((i) => i.purpose === "maskable")) throw new Error("manifest is missing a maskable icon");
+  for (const icon of [...manifest.icons, { src: "/icons/apple-touch-icon.png" }]) {
+    const r = await page.request.get(BASE + icon.src);
+    if (!r.ok() || r.headers()["content-type"] !== "image/png") throw new Error(`${icon.src} should be a PNG`);
+  }
+  await page.waitForFunction(() => navigator.serviceWorker.ready.then((r) => !!r.active));
+  await page.reload();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  const deep = await page.request.get(`${BASE}/results?job=x`);
+  if (deep.status() !== 200 || !(await deep.text()).includes('id="root"')) throw new Error("deep links should load the app");
+
   step("sign in with a magic link (dev mode shows it on screen)");
   await page.goto(`${BASE}/login`);
   await page.fill("#email", `smoke-${Date.now()}@example.com`);
@@ -34,7 +54,7 @@ try {
   await page.click("#confirm-btn");
   await page.waitForURL(/\/dashboard/);
 
-  step("connect the demo service through the real OAuth callback");
+  step("connect the demo service through the real OAuth callback (the service worker must stay out of the way)");
   await page.getByRole("link", { name: "Connect Demo Music" }).click();
   await page.waitForURL(/\/dashboard/);
   await page.getByText("Demo Music is connected.").waitFor();
@@ -69,7 +89,7 @@ try {
   if (total !== 1060) throw new Error(`expected 1060 songs, got ${total}`);
   if (matched / total < 0.9) throw new Error("match rate below 90%");
   await page.locator('#tabs button[data-status="LOW_CONFIDENCE"]').click();
-  await page.locator("#items tr").first().waitFor();
+  await page.locator("#items li[data-id]").first().waitFor();
   await shot("4-results");
   const resultsUrl = page.url();
 
@@ -92,6 +112,7 @@ try {
   step("v1.1 try again (also the 'need a look' songs) — no songs read twice");
   await page.check("#include-unsure");
   await page.click("#retry");
+  await page.locator("#retry-box").waitFor({ state: "detached" }); // shows "running" at once
   await page.getByText("All done!").waitFor({ timeout: 120_000 });
   await page.waitForFunction(() => document.querySelector("#status-pill").textContent === "Done");
   const totalAfter = Number((await page.textContent("#n-total")).replace(/,/g, ""));
@@ -100,11 +121,11 @@ try {
   step("v1.2 keep Road Trip in sync");
   await page.getByRole("button", { name: /Keep “Road Trip” in sync/ }).click();
   await page.getByRole("button", { name: /is kept in sync/ }).waitFor();
-  await page.goto(`${BASE}/dashboard`);
-  await page.locator("#syncs td", { hasText: "Road Trip" }).waitFor();
+  await page.getByRole("link", { name: "Syncs" }).first().click();
+  await page.locator("#syncs h2", { hasText: "Road Trip" }).waitFor();
   await page.locator("#syncs").getByRole("button", { name: "Pause" }).click();
   await page.locator("#syncs").getByRole("button", { name: "Resume" }).waitFor();
-  await shot("4c-dashboard-syncs");
+  await shot("4c-syncs");
 
   step("v1.1 add to an existing playlist (wizard Review step)");
   await page.goto(`${BASE}/transfer`);
@@ -133,12 +154,12 @@ try {
   await page.click("#next");
   await page.click("#next");
   await page.waitForURL(/\/results\?job=/);
-  await page.locator("#stop:not(.hidden)").waitFor();
+  await page.locator("#stop").waitFor();
   page.once("dialog", (d) => d.accept());
   await page.click("#stop");
   await page.waitForFunction(() => document.querySelector("#status-pill").textContent === "Stopped");
   await page.getByText(/already added will stay|Stopped before any songs/).waitFor();
-  await page.locator("#retry-box:not(.hidden)").waitFor();
+  await page.locator("#retry-box").waitFor();
   await shot("4e-stopped");
   await page.goto(resultsUrl);
 
@@ -169,16 +190,34 @@ try {
 
   step("phone-width layout has no sideways scrolling");
   await page.setViewportSize({ width: 375, height: 800 });
-  for (const path of ["/", "/dashboard", "/transfer", "/export", new URL(resultsUrl).pathname + new URL(resultsUrl).search]) {
+  for (const path of ["/", "/dashboard", "/transfer", "/syncs", "/account", "/export", new URL(resultsUrl).pathname + new URL(resultsUrl).search]) {
     await page.goto(BASE + path);
     await page.waitForLoadState("networkidle");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (overflow > 1) throw new Error(`${path} scrolls sideways by ${overflow}px on a phone`);
   }
-  await shot("5-mobile-export");
+  await shot("5-mobile-results");
+  await page.goto(`${BASE}/dashboard`);
+  await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Move" }).last().click();
+  await page.waitForURL(/\/transfer/);
+  await shot("5b-mobile-move");
+
+  step("opens with no internet: the app shell loads and says it is offline");
+  offline = true;
+  await context.setOffline(true);
+  await page.goto(`${BASE}/dashboard`);
+  await page.locator("#offline").waitFor();
+  await page.getByText("You're offline. Connect to the internet").waitFor();
+  await shot("6-offline");
+  await context.setOffline(false);
+  offline = false;
+
+  step("unknown page shows the not-found screen");
+  await page.goto(`${BASE}/no-such-page`);
+  await page.getByText("Lost the beat").waitFor();
 
   step("delete account");
-  await page.goto(`${BASE}/dashboard`);
+  await page.goto(`${BASE}/account`);
   page.once("dialog", (d) => d.accept());
   await page.click("#delete-account");
   await page.waitForURL(BASE + "/");
