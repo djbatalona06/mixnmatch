@@ -19,7 +19,6 @@ export default {
       fontFamily: {
         sans: ['"Inter Variable"', "Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
       },
-      spacing: { safe: "env(safe-area-inset-bottom)" },
     },
   },
   plugins: [],
