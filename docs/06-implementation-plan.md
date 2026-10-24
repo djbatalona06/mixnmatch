@@ -43,6 +43,16 @@
 
 Checks for Phase 3 + 4: 95 unit tests, and the browser smoke test now also clicks Fix, Skip, Try again, Keep in sync, Add to an existing playlist and Stop.
 
+## Phase 5 — One installable app ✅ built → spec: [10-spec-app.md](10-spec-app.md)
+| # | Task | Status |
+|---|---|---|
+| 5.1 | React + Vite + TypeScript + Tailwind + PWA in `app/`, built to `dist/`, served by the same Worker | ✅ |
+| 5.2 | Shared code (`api.ts`, `formats.ts`), session / toast / install stores | ✅ |
+| 5.3 | Frame: header, bottom tabs, offline bar, toasts, install prompt (Android + iPhone steps) | ✅ |
+| 5.4 | All screens rebuilt, plus new Syncs and Account tabs | ✅ |
+| 5.5 | Icons drawn by `scripts/make-icons.mjs` | ✅ |
+| 5.6 | Smoke test also checks manifest, icons, service worker, opening offline, not-found screen | ✅ |
+
 ## Later
 - Two-way sync and mirroring removals
 - Apple Music (needs Apple Developer Program, $99/yr)

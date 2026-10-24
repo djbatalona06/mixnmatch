@@ -4,14 +4,14 @@
 | Layer | Choice | Why |
 |---|---|---|
 | Hosting | **Cloudflare Workers** (free plan), `*.workers.dev` URL | One place for site, API, database and background jobs; free |
-| Website | **Plain HTML / CSS / JavaScript**, one language per file, no framework, no build step | Easy to read and edit |
+| App | **React 18 + Vite + TypeScript + Tailwind CSS**, installable (PWA via `vite-plugin-pwa`), built into `dist/` and served by the same Worker. See [10-spec-app.md](10-spec-app.md) | One app on the phone home screen; opens offline; same URL and sign-in as the API |
 | API | TypeScript in one Worker (`src/index.ts`) | Type safety, runs at the edge |
 | Database | **Cloudflare D1** (SQLite) | Free 5 GB, plain SQL |
 | Background jobs | **Durable Object** `TransferJob` with alarms | One small step at a time, survives restarts, free |
 | Scheduled jobs | **Cron Triggers**: daily 03:17 UTC clean-up; hourly `7 * * * *` Auto-Sync check (2 of the 5 free crons) | Privacy retention rules; daily syncs |
 | Payments (v1.2) | **Stripe** Checkout + Customer Portal, called with plain `fetch`; webhook checked with Web Crypto HMAC | No card data on our side; no SDK or build step |
 | Sign-in | Email magic links via **Resend** | No passwords |
-| Tests | Vitest (unit, using Node's built-in SQLite as a D1 stand-in) + Playwright smoke test against `wrangler dev` |
+| Tests | Vitest (unit, using Node's built-in SQLite as a D1 stand-in) + Playwright smoke test against `wrangler dev` (also checks install, service worker and offline) |
 
 ## Why not the original architecture?
 The original plan named microservices, RabbitMQ/SQS, PostgreSQL, Redis and Auth0. For one developer on a free plan, that is many moving parts and bills. Each piece maps to a Cloudflare feature:

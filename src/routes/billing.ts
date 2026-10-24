@@ -46,8 +46,8 @@ export async function startCheckout(env: Env, user: User, body: { plan?: string 
     "line_items[0][quantity]": "1",
     client_reference_id: user.id,
     "subscription_data[metadata][user_id]": user.id,
-    success_url: `${origin}/dashboard?premium=thanks`,
-    cancel_url: `${origin}/dashboard`,
+    success_url: `${origin}/account?premium=thanks`,
+    cancel_url: `${origin}/account`,
     ...(customer ? { customer } : { customer_email: user.email }),
   });
   return json({ url: session.url });
@@ -57,7 +57,7 @@ export async function openPortal(env: Env, user: User, origin: string): Promise<
   if (!billingEnabled(env)) throw new HttpError(404, "Premium is not available yet");
   const customer = await customerId(env, user.id);
   if (!customer) throw new HttpError(409, "You don't have a Premium plan yet");
-  const session = await stripe(env, "POST", "/billing_portal/sessions", { customer, return_url: `${origin}/dashboard` });
+  const session = await stripe(env, "POST", "/billing_portal/sessions", { customer, return_url: `${origin}/account` });
   return json({ url: session.url });
 }
 

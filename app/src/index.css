@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-bg font-sans text-fg antialiased;
+  }
+  /* No double-tap zoom on things you tap. */
+  a, button, input, select, label, textarea, [role="checkbox"], [role="tab"] {
+    touch-action: manipulation;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-bg;
+  }
+  input:not([type="checkbox"]):not([type="file"]), select {
+    @apply min-h-[44px] w-full rounded-xl border border-line bg-raised px-4 text-fg placeholder:text-neutral-500;
+  }
+  input[type="checkbox"] {
+    @apply h-5 w-5 accent-amber-500 align-middle;
+  }
+  input[type="file"] {
+    @apply w-full text-sm text-muted file:mr-3 file:min-h-[44px] file:rounded-full file:border-0 file:bg-raised file:px-4 file:font-semibold file:text-fg;
+  }
+  label {
+    @apply text-sm font-semibold;
+  }
+  .prose-page h2 {
+    @apply mb-2 mt-8 text-xl font-semibold;
+  }
+  .prose-page ul {
+    @apply list-disc space-y-2 pl-5 text-neutral-300;
+  }
+  .prose-page p {
+    @apply text-neutral-300;
+  }
+}
