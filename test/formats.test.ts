@@ -1,6 +1,6 @@
 // @ts-nocheck — formats.js is plain browser JavaScript.
 import { describe, expect, it } from "vitest";
-import { parseCsvRows, parseImport, toBackupJson, toCsv, toJspf } from "../public/js/formats.js";
+import { parseCsvRows, parseImport, toBackupJson, toCsv, toJspf } from "../app/src/lib/formats";
 
 const playlist = {
   name: "Road Trip",

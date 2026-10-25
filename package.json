@@ -2,22 +2,42 @@
   "name": "mixnmatch",
   "version": "0.1.0",
   "private": true,
-  "description": "mix n match: move your playlists and liked songs between music services.",
+  "description": "mix n match: one app to move your playlists and liked songs between music services, and keep them in sync.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:app": "vite --config app/vite.config.ts",
+    "build": "vite build --config app/vite.config.ts",
+    "icons": "node scripts/make-icons.mjs",
     "db:migrate:local": "wrangler d1 migrations apply mixnmatch --local",
     "db:migrate:remote": "wrangler d1 migrations apply mixnmatch --remote",
     "deploy": "wrangler d1 migrations apply mixnmatch --remote && wrangler deploy",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p app",
     "test": "vitest run",
     "smoke": "node test/smoke.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261023.1",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^5.2.0",
+    "autoprefixer": "^10.6.1",
     "playwright-core": "^1.64.1",
+    "postcss": "^8.5.31",
+    "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
+    "vite": "^7.3.7",
+    "vite-plugin-pwa": "^2.0.0",
     "vitest": "^3.2.7",
+    "workbox-window": "^7.4.1",
     "wrangler": "^4.152.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "lucide-react": "^1.61.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.4",
+    "zustand": "^5.0.16"
   }
 }
