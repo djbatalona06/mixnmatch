@@ -1,9 +1,9 @@
-// End-to-end smoke test: drives a real browser through the whole app against `wrangler dev`.
-// Needs: wrangler dev running with DEV_MODE=1 and ENABLE_MOCK=1 (see .dev.vars.example).
+// End-to-end smoke test: drives a real browser through the whole app against `vercel dev`.
+// Needs: vercel dev running with DEV_MODE=1 and ENABLE_MOCK=1 (see .env.example).
 // Run:   npm run dev   (in one terminal)   then   npm run smoke
 import { chromium } from "playwright-core";
 
-const BASE = process.env.BASE_URL ?? "http://127.0.0.1:8787";
+const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const SHOTS = process.env.SHOT_DIR ?? "test-results";
 const executablePath = process.env.CHROME_PATH ?? "/opt/pw-browsers/chromium";
 
