@@ -24,10 +24,29 @@ function expect(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-await check("home page loads", async () => {
+// The app is one page shell: its text is drawn by the browser, so check the shell and its script.
+const isAppShell = (html) => html.includes('<div id="root">') && /<script[^>]+src="\/assets\/[^"]+\.js"/.test(html);
+
+await check("home page loads the app", async () => {
   const res = await get("/");
   expect(res.status === 200, `status ${res.status}`);
-  expect((await res.text()).includes("Take your music"), "the home page text is missing");
+  expect(isAppShell(await res.text()), "the app shell (root element and script) is missing");
+});
+
+await check("deep links load the app (sign-in links, music app returns, results)", async () => {
+  for (const path of ["/dashboard", "/results?job=x", "/login"]) {
+    const res = await get(path);
+    expect(res.status === 200, `${path}: status ${res.status}`);
+    expect(isAppShell(await res.text()), `${path}: the app shell is missing`);
+  }
+});
+
+await check("the installable-app files are served fresh", async () => {
+  for (const path of ["/manifest.webmanifest", "/sw.js"]) {
+    const res = await get(path);
+    expect(res.status === 200, `${path}: status ${res.status}`);
+    expect((res.headers.get("cache-control") ?? "").includes("no-cache"), `${path}: should be no-cache so updates arrive`);
+  }
 });
 
 await check("the API answers with JSON", async () => {
@@ -65,14 +84,19 @@ await check("Speed Insights script is served", async () => {
   expect(res.status === 200, `status ${res.status}: turn on Speed Insights in the Vercel project settings`);
 });
 
-await check("the sign-in page does not load analytics", async () => {
-  const html = await (await get("/login")).text();
-  expect(!html.includes("/_vercel/insights/"), "analytics found on the sign-in page");
+// The sign-in page is kept out of analytics inside the app (app/src/components/chrome.tsx);
+// test/deploy-config.test.ts checks that, because the page shell is the same for every address.
+
+await check("unknown pages load the app, which shows its own not-found screen", async () => {
+  const res = await get("/this-page-does-not-exist");
+  expect(res.status === 200, `expected 200 (the app decides), got ${res.status}`);
+  expect(isAppShell(await res.text()), "the app shell is missing");
 });
 
-await check("unknown pages get the 404 page", async () => {
-  const res = await get("/this-page-does-not-exist");
+await check("unknown API addresses get a 404 in JSON", async () => {
+  const res = await get("/api/this-does-not-exist");
   expect(res.status === 404, `expected 404, got ${res.status}`);
+  expect((res.headers.get("content-type") ?? "").includes("application/json"), "the answer is not JSON");
 });
 
 console.log(failures ? `\n${failures} check(s) failed on ${base}` : `\nAll checks passed on ${base}`);

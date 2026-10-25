@@ -1,4 +1,4 @@
-# Runs on every pull request and on every push to main: types, then tests.
+# Runs on every pull request and on every push to main: types, tests, then the app build.
 name: CI
 
 on:
@@ -20,3 +20,5 @@ jobs:
         run: npm run typecheck
       - name: Tests (includes the deploy checks)
         run: npm test
+      - name: App build
+        run: npm run build:app

@@ -25,11 +25,12 @@ mix n match never hosts, streams, downloads or copies audio. It only reads and w
 | Session cookie `HttpOnly; Secure; SameSite=Lax` | `src/auth/session.ts` |
 | CSRF: changing requests need `X-Requested-With` + same `Origin` | `src/web.ts` |
 | Sign-in email rate limit: 5/hour per email or IP | `src/auth/magic-link.ts` |
-| Strict Content-Security-Policy, no inline scripts/styles, `frame-ancestors 'none'` | `public/_headers` |
-| All page text inserted as text, never as HTML (XSS-safe) | `public/js/ui.js` → `el()` |
+| Strict Content-Security-Policy, no inline scripts, `frame-ancestors 'none'`; fonts bundled (no outside font server) | `app/public/_headers` |
+| All page text inserted as text, never as HTML (XSS-safe): React escapes everything, and the app never uses `dangerouslySetInnerHTML` | `app/src/**` |
 | Pagination cursors only followed when they point at the service's own API (and Deezer cursors are stripped of tokens) | adapters |
 | Upload validation: size, song count (5,000), field lengths, ISRC format | `src/routes/jobs.ts` |
-| CSV export guards against spreadsheet formula injection | `public/js/formats.js` |
+| CSV export guards against spreadsheet formula injection | `app/src/lib/formats.ts` |
+| The service worker never answers `/api/*` (fresh data only; connecting an app goes straight to the server) | `app/vite.config.ts` → `navigateFallbackDenylist` |
 | Audit log of sign-ins, connections, transfers, deletions | `audit_log` table |
 | Every data query scoped to the signed-in user | routes |
 | Fix-it: another user's song id → 404 (never 403); manual picks never enter the shared `match_cache`; search limited to 30/min per user | `src/routes/fix.ts` |

@@ -7,6 +7,10 @@ Say you use Spotify, but you want to switch to TIDAL. You have lots of playlists
 It works with **Spotify**, **TIDAL**, **Deezer**, **YouTube Music**, and **SoundCloud**.
 It can also save your playlists in a file, so you have a backup.
 
+It is **one app**. You can put it on your phone's home screen, like any other app:
+- **Android / Chrome / Edge:** tap **Install app** on the Account screen.
+- **iPhone:** in Safari, tap **Share**, then **Add to Home Screen**.
+
 ---
 
 ## What it does
@@ -45,7 +49,8 @@ We try three ways, in this order:
 | Folder | What is inside |
 |---|---|
 | `docs/` | The plans for the app. Start here to learn how it was designed. |
-| `public/` | The web pages people see. |
+| `app/` | The app people see (React). `app/src/pages/` has one file per screen. |
+| `scripts/` | Helpers, like the one that draws the app icons. |
 | `src/` | The code that runs on the server. |
 | `migrations/` | The setup for the database (where we keep data). |
 | `test/` | Checks that make sure the code works. |
@@ -76,14 +81,18 @@ npm run db:migrate
 npm run dev
 ```
 
-The first time, `vercel dev` asks you to link the project to your Vercel account. Answer the questions. Then open **http://localhost:3000** in your web browser.
+The first time, `vercel dev` asks you to link the project to your Vercel account. Answer the questions. Then open **http://127.0.0.1:8787** in your web browser.
+
+`npm run dev` builds the app first. After you change a file in `app/src/`, stop it and start it again, or use the faster way below.
+
+**Want instant updates while you change how screens look?** Keep `npm run dev` running, and in a second window type `npm run dev:app`. Then open **http://127.0.0.1:5173**. Changes show up as soon as you save. (Connecting a music app sends you back to port 8787. That is normal.)
 
 **Good to know:** On your computer, you do not need real music accounts.
 - The sign-in link shows up on the screen. No email is sent.
 - There is a pretend music app called **Demo Music**. You can test everything with it.
 - The database is a small file in `.data/`. Delete that folder to start fresh.
 - Transfers move forward when the cron runs. To push them on by hand, type:
-  `curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/tick`
+  `curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://127.0.0.1:8787/api/cron/tick`
 
 ---
 

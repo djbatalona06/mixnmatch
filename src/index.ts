@@ -1,4 +1,4 @@
-// mix n match: the server code. Vercel serves the files in /public itself; this handles /api/*.
+// mix n match: the server code. Vercel serves the built app (dist/) itself; this handles /api/*.
 import { timingSafeEqual } from "node:crypto";
 import { getAdapter, isPlatform, platformList } from "./adapters/registry";
 import type { Page, Platform, Playlist, Track } from "./adapters/types";
