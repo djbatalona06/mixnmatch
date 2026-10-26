@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design tokens. Change a value here and the whole app follows.
+   Colours are "R G B" so Tailwind can add see-through versions (bg-bg/90, bg-ok/15). */
+:root {
+  --c-bg: 11 10 9;
+  --c-surface: 20 19 17;
+  --c-raised: 28 26 24;
+  --c-line: 41 38 35;
+  --c-line-strong: 78 73 67;
+  --c-fg: 245 243 240;
+  --c-muted: 168 162 154;
+  --c-accent: 227 160 71;
+  --c-accent-hover: 236 181 98;
+  --c-accent-deep: 168 98 36;
+  --c-ok: 70 190 140;
+  --c-bad: 239 123 114;
+
+  --radius-card: 16px;
+  --radius-panel: 24px;
+
+  /* Shadows use the background's own warm black, so they read as depth and never as glow. */
+  --shadow-soft: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 10px 28px -14px rgb(6 4 2 / 0.7);
+  --shadow-lift: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 40px -16px rgb(6 4 2 / 0.85);
+}
+
 @layer base {
   html {
     color-scheme: dark;
@@ -9,6 +33,13 @@
   }
   body {
     @apply bg-bg font-sans text-fg antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
   /* No double-tap zoom on things you tap. */
   a, button, input, select, label, textarea, [role="checkbox"], [role="tab"] {
@@ -18,10 +49,10 @@
     @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-bg;
   }
   input:not([type="checkbox"]):not([type="file"]), select {
-    @apply min-h-[44px] w-full rounded-xl border border-line bg-raised px-4 text-fg placeholder:text-neutral-500;
+    @apply min-h-[44px] w-full rounded-xl border border-line bg-raised px-4 text-fg transition placeholder:text-muted/80 hover:border-line-strong;
   }
   input[type="checkbox"] {
-    @apply h-5 w-5 accent-amber-500 align-middle;
+    @apply h-5 w-5 accent-accent align-middle;
   }
   input[type="file"] {
     @apply w-full text-sm text-muted file:mr-3 file:min-h-[44px] file:rounded-full file:border-0 file:bg-raised file:px-4 file:font-semibold file:text-fg;
@@ -33,9 +64,85 @@
     @apply mb-2 mt-8 text-xl font-semibold;
   }
   .prose-page ul {
-    @apply list-disc space-y-2 pl-5 text-neutral-300;
+    @apply list-disc space-y-2 pl-5 text-fg/80;
   }
   .prose-page p {
-    @apply text-neutral-300;
+    @apply max-w-[65ch] text-fg/80;
+  }
+}
+
+@layer components {
+  /* A vinyl record drawn with CSS: grooves, a soft shine, and a label that is the one splash of accent. */
+  .record {
+    position: relative;
+    border-radius: 9999px;
+    background:
+      radial-gradient(circle, transparent 0 23%, rgb(var(--c-bg)) 23.5% 24%, transparent 24.5%),
+      repeating-radial-gradient(circle, rgb(255 255 255 / 0.05) 0 1px, rgb(0 0 0 / 0.38) 1px 3px),
+      rgb(var(--c-surface));
+    box-shadow: inset 0 0 0 1px rgb(var(--c-line)), var(--shadow-lift);
+  }
+  .record::before {
+    /* The shine: a fixed light across the disc, so the grooves seem to move under it. */
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: conic-gradient(from 20deg, transparent 0 18%, rgb(255 255 255 / 0.1) 25%, transparent 32% 68%, rgb(255 255 255 / 0.07) 75%, transparent 82%);
+    pointer-events: none;
+  }
+  .record-label {
+    position: absolute;
+    inset: 31%;
+    border-radius: 9999px;
+    background: radial-gradient(circle at 35% 30%, rgb(var(--c-accent-hover)), rgb(var(--c-accent)) 55%, rgb(var(--c-accent-deep)));
+  }
+  .record-label::after {
+    content: "";
+    position: absolute;
+    inset: 42%;
+    border-radius: 9999px;
+    background: rgb(var(--c-bg));
+  }
+
+  /* Loading placeholder: a calm sweep instead of a spinner. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgb(var(--c-raised));
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.05), transparent);
+    animation: sweep 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes sweep {
+  to { transform: translateX(100%); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes turn {
+  to { transform: rotate(360deg); }
+}
+
+/* Only two things move on their own: the hero records turn slowly, and the hero text rises in once. */
+.hero-rise { animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.hero-rise-2 { animation-delay: 0.08s; }
+.hero-rise-3 { animation-delay: 0.16s; }
+.turn-slow { animation: turn 24s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

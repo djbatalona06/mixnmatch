@@ -24,8 +24,8 @@ export default defineConfig({
         scope: "/",
         display: "standalone",
         orientation: "portrait",
-        background_color: "#0a0a0a",
-        theme_color: "#0a0a0a",
+        background_color: "#0b0a09",
+        theme_color: "#0b0a09",
         icons: [
           { src: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
           { src: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
@@ -35,7 +35,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
         // Only the Latin letters are stored on the phone; other alphabets load when a song needs them.
-        globIgnores: ["**/inter-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*"],
+        globIgnores: ["**/geist-{cyrillic,cyrillic-ext,vietnamese}-*"],
         navigateFallback: "/index.html",
         // Never answer /api/* from the phone: connecting a music app goes through
         // /api/connect and /api/callback, and every answer from the server must be fresh.

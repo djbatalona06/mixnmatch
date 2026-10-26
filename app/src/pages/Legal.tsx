@@ -1,11 +1,11 @@
 // Privacy and Terms. Drafts: a lawyer should review both before launch.
 
-const Draft = () => <p className="text-muted">Draft — have a lawyer review this before launch. Last updated: October 2026.</p>;
+const Draft = () => <p className="text-muted">Draft: have a lawyer review this before launch. Last updated: October 2026.</p>;
 
 export function Privacy() {
   return (
     <article className="prose-page mx-auto max-w-3xl pt-4">
-      <h1 className="text-3xl font-bold">Privacy</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">Privacy</h1>
       <Draft />
 
       <h2>What we keep</h2>
@@ -29,7 +29,7 @@ export function Privacy() {
           twice). Deleted when you delete the sync.
         </li>
         <li>
-          <strong>If you buy Premium</strong>: your Stripe customer number and the date your paid period ends. Never your card details — Stripe handles those.
+          <strong>If you buy Premium</strong>: your Stripe customer number and the date your paid period ends. Never your card details. Stripe handles those.
         </li>
         <li>
           <strong>On your own device</strong>: the installed app keeps its own screens and pictures so it opens quickly, and remembers if you hid the "install"
@@ -73,7 +73,7 @@ export function Privacy() {
 export function Terms() {
   return (
     <article className="prose-page mx-auto max-w-3xl pt-4">
-      <h1 className="text-3xl font-bold">Terms of use</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">Terms of use</h1>
       <Draft />
 
       <h2>Using mix n match</h2>

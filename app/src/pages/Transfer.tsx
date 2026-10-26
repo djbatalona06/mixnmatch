@@ -23,7 +23,7 @@ function Tile({ id, title, subtitle, pressed, onClick }: { id: string; title: st
       onClick={onClick}
       className={cx(
         "tile flex min-h-[72px] items-center gap-3 rounded-xl border bg-surface p-4 text-left transition",
-        pressed ? "border-accent ring-1 ring-accent" : "border-line hover:border-neutral-600",
+        pressed ? "border-accent ring-1 ring-accent" : "border-line hover:border-line-strong",
       )}
     >
       <PlatformDot id={id} className="h-3.5 w-3.5" />

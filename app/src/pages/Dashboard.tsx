@@ -3,7 +3,7 @@ import { ChevronRight, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { InstallBanner } from "../components/InstallCard";
-import { buttonClass, Button, Card, Notice, PageTitle, Pill, PlatformDot, Spinner, type Tone } from "../components/ui";
+import { buttonClass, Button, Card, EmptyState, Notice, PageTitle, Pill, PlatformDot, Skeleton, type Tone } from "../components/ui";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/format";
 import { platformName } from "../lib/platforms";
@@ -124,7 +124,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <Link to="/syncs" className="flex items-center gap-4 rounded-xl border border-line bg-surface p-5 transition hover:border-neutral-600">
+      <Link to="/syncs" className="flex items-center gap-4 rounded-xl border border-line bg-surface p-5 transition hover:border-line-strong">
         <RefreshCw className="shrink-0 text-accent" aria-hidden />
         <span className="min-w-0 flex-1">
           <span className="block font-semibold">Syncs</span>
@@ -136,11 +136,20 @@ export default function Dashboard() {
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Recent transfers</h2>
         {jobs === null ? (
-          <p className="text-muted">
-            <Spinner /> Loading…
-          </p>
+          <div className="space-y-2" role="status" aria-label="Loading">
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+          </div>
         ) : !jobs.length ? (
-          <p className="text-muted">No transfers yet.</p>
+          <EmptyState
+            action={
+              <Link to="/transfer" className="font-semibold text-accent hover:text-accent-hover">
+                Start your first transfer
+              </Link>
+            }
+          >
+            No transfers yet.
+          </EmptyState>
         ) : (
           <ul id="jobs" className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
             {jobs.map((job) => {

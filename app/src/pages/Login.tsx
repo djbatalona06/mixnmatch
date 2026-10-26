@@ -58,7 +58,7 @@ export default function Login() {
     <div className="mx-auto max-w-md space-y-4 pt-6">
       {token ? (
         <Card className="space-y-4">
-          <h1 className="text-2xl font-bold">Welcome back</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
           <p className="text-muted">Tap below to finish signing in.</p>
           <Button variant="primary" size="big" className="w-full" id="confirm-btn" onClick={confirm} disabled={confirming}>
             Sign in to mix n match
@@ -66,7 +66,7 @@ export default function Login() {
         </Card>
       ) : (
         <Card className="space-y-4">
-          <h1 className="text-2xl font-bold">Sign in</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
           <p className="text-muted">Type your email and we'll send you a one-tap sign-in link. No password needed.</p>
           <form onSubmit={send} className="space-y-4">
             <div className="space-y-1.5">
