@@ -1,0 +1,164 @@
+/* Styles for docs/layout-board.html and the generated test-results/layout/report.html. */
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --raised: #1a1a1a;
+  --line: #262626;
+  --fg: #f5f5f5;
+  --muted: #a3a3a3;
+  --accent: #f59e0b;
+  --ok: #10b981;
+  --bad: #f87171;
+  --gutter: rgba(245, 158, 11, 0.18);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--accent); }
+code { font: 0.85em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--raised); padding: 1px 5px; border-radius: 4px; }
+
+.top, main { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+.top { padding-top: 24px; }
+.top h1 { margin: 0 0 4px; font-size: 26px; }
+.top p { margin: 0 0 12px; color: var(--muted); max-width: 70ch; }
+
+/* ---------- tabs (board and report) ---------- */
+.tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: thin;
+}
+.tabs button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.tabs button:focus-visible, .widths button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.panel { padding: 16px 0 48px; }
+.panel h2 { font-size: 18px; margin: 24px 0 8px; }
+.panel > p { color: var(--muted); max-width: 75ch; }
+
+.badge { display: inline-block; min-width: 22px; padding: 0 6px; border-radius: 999px; font-size: 12px; text-align: center; }
+.badge.ok, .ok { color: var(--ok); }
+.badge.bad, .bad { color: var(--bad); }
+.badge.ok { background: rgba(16, 185, 129, 0.15); }
+.badge.bad { background: rgba(248, 113, 113, 0.15); }
+.tabs button[aria-selected="true"] .badge { background: var(--bg); }
+
+/* ---------- width switch (board) ---------- */
+.widths { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.widths button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.widths button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.widths small { color: var(--muted); }
+
+/* ---------- the wireframe ---------- */
+.stage { overflow: hidden; padding: 8px 0; }
+.frame {
+  position: relative;
+  margin: 0 auto;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.frame .row { max-width: 1152px; margin: 0 auto; padding: 0 16px; position: relative; }
+.frame .hdr { border-bottom: 1px solid var(--line); padding-top: 10px; padding-bottom: 10px; }
+.frame .body { padding-top: 20px; padding-bottom: 28px; }
+.frame .ftr { border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: 10px; }
+.frame .gut { position: absolute; top: 0; bottom: 0; width: 16px; background: repeating-linear-gradient(45deg, var(--gutter) 0 4px, transparent 4px 8px); }
+.frame .gut.l { left: 0; }
+.frame .gut.r { right: 0; }
+
+.grid { display: grid; gap: 16px; position: relative; }
+.grid.tight { gap: 8px; }
+.cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  pointer-events: none;
+}
+.cols span { background: rgba(122, 167, 255, 0.06); border-left: 1px dashed rgba(122, 167, 255, 0.25); border-right: 1px dashed rgba(122, 167, 255, 0.25); }
+
+.part {
+  position: relative;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+}
+.part.accent { border-color: rgba(245, 158, 11, 0.6); background: rgba(245, 158, 11, 0.12); }
+.part.thin { min-height: 28px; padding-top: 3px; padding-bottom: 3px; }
+.part.m { min-height: 80px; }
+.part.l { min-height: 130px; }
+.part.xl { min-height: 220px; }
+.part .place { display: block; color: var(--accent); font: 11px ui-monospace, Menlo, monospace; font-weight: 400; }
+.part .src { display: block; color: var(--muted); font: 11px ui-monospace, Menlo, monospace; font-weight: 400; }
+.part > .grid { margin-top: 6px; }
+
+.tabbar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+.tabbar span { min-height: 60px; display: flex; align-items: center; justify-content: center; border-right: 1px dashed var(--line); }
+.offline { background: #f59e0b; color: var(--bg); text-align: center; font-weight: 700; font-size: 13px; padding: 8px; }
+.note { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+/* ---------- rules and legend ---------- */
+table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
+.swatch { display: inline-block; width: 18px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 3px; }
+.swatch.gut { background: repeating-linear-gradient(45deg, var(--gutter) 0 4px, transparent 4px 8px); border: 1px solid var(--line); }
+.swatch.col { background: rgba(122, 167, 255, 0.12); border: 1px dashed rgba(122, 167, 255, 0.5); }
+.swatch.prt { background: var(--surface); border: 1px solid #3a3a3a; }
+
+/* ---------- report ---------- */
+.shots { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; }
+.shot { margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.shot figcaption { margin-bottom: 8px; font-size: 14px; }
+.shot img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); }
+.problems { margin: 0 0 10px; padding-left: 18px; font-size: 13px; color: var(--bad); }
+.problems li { margin-bottom: 4px; }
+.problems code { color: var(--fg); }
+
+[hidden] { display: none !important; }

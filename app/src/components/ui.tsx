@@ -13,7 +13,8 @@ const VARIANTS: Record<Variant, string> = {
   danger: "bg-red-500/10 text-bad border border-red-500/40 hover:bg-red-500/20",
 };
 const SIZES: Record<Size, string> = {
-  small: "min-h-[40px] px-3.5 text-[13px]",
+  // 44px is the smallest comfortable size to tap on a phone; desktops can be a little tighter.
+  small: "min-h-[44px] px-3.5 text-[13px] md:min-h-[40px]",
   normal: "min-h-[44px] px-5 text-sm",
   big: "min-h-[52px] px-6 text-base",
 };

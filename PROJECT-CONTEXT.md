@@ -7,7 +7,7 @@
 **Current phase:** Phase 5 (installable app) ✅ built. Phases 3–4 (v1.1, v1.2) ✅. Phase 2 (go live) waits on the owner's accounts.
 **Key files:** app/src/App.tsx (routes), app/src/pages/*.tsx (one per screen), app/src/components/{chrome,ui,InstallCard}.tsx, app/src/store/{session,toast,install}.ts, app/src/lib/{api,formats,types}.ts, app/vite.config.ts (PWA + dev proxy), wrangler.jsonc
 **PWA status:** Manifest ✅ | Service Worker ✅ (never handles /api/*) | Icons ✅ (scripts/make-icons.mjs) | HTTPS ✅ (Cloudflare) | Opens offline ✅
-**Checks:** `npm test` (96 unit), `npm run typecheck` (server + app), `npm run smoke` (browser, against `npm run dev`)
+**Checks:** `npm test` (96 unit), `npm run typecheck` (server + app), `npm run smoke` (browser, against `npm run dev`), `npm run layout:check` (every screen × 3 widths, no server; plan in docs/layout-board.html)
 **Dev:** `npm run dev` (port 8787, rebuilds on save in app/src) · `npm run dev:app` (port 5173, instant reload, proxies /api to 8787)
 **Open issues:** dev-only tools (vitest, wrangler) have npm audit warnings, same as main; the shipped app reports 0. SoundCloud/Stripe need the owner's accounts.
 **Next task:** go live (docs/06 Phase 2), then verify each music adapter with a real account.

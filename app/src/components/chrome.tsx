@@ -16,7 +16,7 @@ const TABS = [
 
 function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
+    <Link to="/" className="flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap text-lg font-bold tracking-tight">
       <img src="/favicon.svg" alt="" className="h-7 w-7" />
       mix n match
     </Link>
@@ -64,10 +64,10 @@ function Footer() {
     <footer className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm text-muted">
       <span>mix n match</span>
       <span className="flex gap-4">
-        <Link to="/privacy" className="hover:text-fg">
+        <Link to="/privacy" className="inline-flex min-h-[44px] items-center hover:text-fg">
           Privacy
         </Link>
-        <Link to="/terms" className="hover:text-fg">
+        <Link to="/terms" className="inline-flex min-h-[44px] items-center hover:text-fg">
           Terms
         </Link>
       </span>
@@ -138,7 +138,7 @@ export function AppLayout() {
           </nav>
           <div className="hidden items-center gap-3 md:flex">
             {me ? (
-              <span className="max-w-[16rem] truncate text-sm text-muted" title={me.email}>
+              <span className="hidden max-w-[16rem] truncate text-sm text-muted lg:block" title={me.email}>
                 {me.email}
               </span>
             ) : null}

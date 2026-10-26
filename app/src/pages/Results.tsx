@@ -410,7 +410,7 @@ export default function Results() {
             <Button variant="primary" id="retry" onClick={retry} disabled={busy === "retry"}>
               Try again
             </Button>
-            <label className="flex items-center gap-2 font-normal">
+            <label className="flex min-h-[44px] items-center gap-2 font-normal">
               <input type="checkbox" id="include-unsure" checked={includeUnsure} onChange={(e) => setIncludeUnsure(e.target.checked)} /> Also try "Need a look" songs again
             </label>
           </div>
@@ -438,12 +438,12 @@ export default function Results() {
             <div className="flex flex-wrap gap-2">
               {syncable.map((p) =>
                 synced.has(p.sel_index) ? (
-                  <Button key={p.sel_index} size="small" disabled>
-                    “{p.name}” is kept in sync ✓
+                  <Button key={p.sel_index} size="small" disabled className="max-w-full" title={p.name}>
+                    <span className="truncate">“{p.name}” is kept in sync ✓</span>
                   </Button>
                 ) : (
-                  <Button key={p.sel_index} size="small" variant="primary" onClick={() => keepInSync(p)}>
-                    Keep “{p.name}” in sync
+                  <Button key={p.sel_index} size="small" variant="primary" className="max-w-full" title={p.name} onClick={() => keepInSync(p)}>
+                    <span className="truncate">Keep “{p.name}” in sync</span>
                   </Button>
                 ),
               )}
@@ -470,7 +470,7 @@ export default function Results() {
               aria-selected={tab === i}
               onClick={() => setTab(i)}
               className={cx(
-                "min-h-[40px] shrink-0 rounded-full border px-4 text-sm font-semibold transition",
+                "min-h-[44px] shrink-0 rounded-full border px-4 text-sm font-semibold transition md:min-h-[40px]",
                 tab === i ? "border-accent bg-accent text-bg" : "border-line text-muted hover:text-fg",
               )}
             >
