@@ -59,11 +59,11 @@ We try three ways, in this order:
 
 ## Try it on your own computer
 
-You need **Node.js** installed. Then type these lines, one at a time:
+You need **Node.js 22** installed. Then type these lines, one at a time:
 
 ```bash
 npm install
-cp .dev.vars.example .dev.vars
+cp .env.example .env.local
 ```
 
 Now make a secret key. Type this:
@@ -72,24 +72,27 @@ Now make a secret key. Type this:
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-Copy what it prints. Open the file `.dev.vars`. Paste it after `TOKEN_KEY=`.
+Copy what it prints. Open the file `.env.local`. Paste it after `TOKEN_KEY=`. Do the same for `CRON_SECRET=` (use a new key).
 
 Then type:
 
 ```bash
-npm run db:migrate:local
+npm run db:migrate
 npm run dev
 ```
 
-Open **http://localhost:8787** in your web browser.
+The first time, `vercel dev` asks you to link the project to your Vercel account. Answer the questions. Then open **http://127.0.0.1:8787** in your web browser.
 
-`npm run dev` builds the app first. When you save a file in `app/src/`, it builds again by itself. Then refresh the browser.
+`npm run dev` builds the app first. After you change a file in `app/src/`, stop it and start it again, or use the faster way below.
 
 **Want instant updates while you change how screens look?** Keep `npm run dev` running, and in a second window type `npm run dev:app`. Then open **http://127.0.0.1:5173**. Changes show up as soon as you save. (Connecting a music app sends you back to port 8787. That is normal.)
 
 **Good to know:** On your computer, you do not need real music accounts.
 - The sign-in link shows up on the screen. No email is sent.
 - There is a pretend music app called **Demo Music**. You can test everything with it.
+- The database is a small file in `.data/`. Delete that folder to start fresh.
+- Transfers move forward when the cron runs. To push them on by hand, type:
+  `curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://127.0.0.1:8787/api/cron/tick`
 
 ---
 
@@ -98,7 +101,7 @@ Open **http://localhost:8787** in your web browser.
 ```bash
 npm test
 ```
-This runs quick checks on the code.
+This runs quick checks on the code. It also checks the Vercel setup, the analytics tags and the cron lock.
 
 ```bash
 npm run typecheck
@@ -111,32 +114,28 @@ npm run smoke
 This opens a robot web browser and clicks through the whole app.
 It needs `npm run dev` to be running in another window.
 
+```bash
+npm run smoke:deploy -- https://your-site.vercel.app
+```
+This checks a **live** site: the pages, the API, the security headers, and the analytics. It only reads, so it is safe to run any time. A GitHub workflow runs it after every deploy.
+
 ---
 
 ## Put it on the internet
 
-mix n match runs on **Cloudflare**. The free plan is enough.
+mix n match runs on **Vercel** (the website and the server). The database is **Turso**. Both have free plans, but the transfer check needs the **Vercel Pro** plan (see Limits).
 
-**Step 1.** Log in to Cloudflare:
-```bash
-npx wrangler login
-```
+**Step 1.** Import this GitHub repo at vercel.com/new. Vercel builds it and gives you a web address. Every push to `main` makes a new live version.
 
-**Step 2.** Make the database:
-```bash
-npx wrangler d1 create mixnmatch
-```
-It prints a `database_id`. Copy it into the file `wrangler.jsonc`.
+**Step 2.** Add the database. In your Vercel project, open **Storage** (or the Marketplace) and add **Turso**. It sets `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` for you. Every build then creates any new database tables on its own.
 
-**Step 3.** Save your secret key (make one the same way as above):
-```bash
-npx wrangler secret put TOKEN_KEY
-```
+**Step 3.** Add your secrets under **Settings → Environment Variables**:
+- `TOKEN_KEY`: a secret key (make one the same way as above).
+- `CRON_SECRET`: another new secret key. Vercel sends it with every cron call, so nobody else can run the cron.
 
-**Step 4.** Send it live:
-```bash
-npm run deploy
-```
+**Step 4.** Turn on **Web Analytics** and **Speed Insights** in the project. Both are free and use no cookies.
+
+**Step 5.** Check the live site: `npm run smoke:deploy -- https://your-site.vercel.app`
 
 ---
 
@@ -148,7 +147,7 @@ For each one:
 1. Go to the website in the table.
 2. Make a new app.
 3. Where it asks for a **redirect URL**, put the link from the table. Change `<your-site>` to your real web address.
-4. It gives you keys. Save each key with `npx wrangler secret put NAME`.
+4. It gives you keys. Save each key as an environment variable in Vercel (Settings → Environment Variables).
 
 | Music app | Where to go | Redirect URL | Keys to save |
 |---|---|---|---|
@@ -173,6 +172,7 @@ Premium only shows up once these keys are saved. Have a lawyer check the terms b
 
 ## Limits to know about
 
+- **Vercel Pro is needed for transfers.** The free Hobby plan runs scheduled jobs only once a day. Transfers then wait up to a day between steps, and the deploy may be refused. Pro runs the check every minute.
 - **Spotify:** In test mode, only **5 people** can use your app. The app owner needs **Spotify Premium**.
 - **YouTube:** Google only lets us add about **60 songs a day** to YouTube. This is for everyone together. Big moves pause and finish the next day.
 - **Email:** Sign-in emails only reach *you* until you own a web address.
@@ -185,4 +185,5 @@ Premium only shows up once these keys are saved. Have a lawyer check the terms b
 - The keys we get from music apps are **locked** (encrypted) before we save them.
 - We only move song **names**. We never copy the music itself.
 - Old song lists are deleted after 30 days.
+- We measure visits and page speed with Vercel Web Analytics and Speed Insights. They use no cookies. The sign-in page is not measured, because its link carries a secret.
 - You can delete your account and all your data with one button.

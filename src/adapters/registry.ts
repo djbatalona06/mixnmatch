@@ -1,5 +1,6 @@
 // Picks the right adapter for a platform and tells the website which ones are switched on.
 import type { Env } from "../env";
+import type { Db } from "../db";
 import { QuotaError, type FetchFn } from "../http";
 import { createDeezerAdapter } from "./deezer";
 import { createMockAdapter } from "./mock";
@@ -42,7 +43,7 @@ export function utcDay(now = Date.now()): string {
 }
 
 /** Records quota use in D1; throws QuotaError if today's budget would be exceeded. */
-export async function spendQuota(db: D1Database, platform: string, units: number, budget: number): Promise<void> {
+export async function spendQuota(db: Db, platform: string, units: number, budget: number): Promise<void> {
   const row = await db
     .prepare(
       `INSERT INTO api_quota (platform, day, units) VALUES (?1, ?2, ?3)

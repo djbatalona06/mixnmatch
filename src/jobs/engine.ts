@@ -1,5 +1,5 @@
 // The transfer engine. A transfer is done in many small steps so that each one
-// fits inside Cloudflare's free-plan limits (10 ms CPU, 50 outside calls, 50 database queries).
+// stays small (a few outside calls and database queries), so the runner can run many steps in one cron call.
 //
 // For each selected playlist (or Liked Songs):
 //   read     -> copy the song list from the source into transfer_items
@@ -10,6 +10,7 @@
 // Per-playlist progress is kept in transfer_selections (D1), so Fix, Try again and
 // Auto-Sync still know where songs went after the job has finished.
 import type { Platform, PlatformAdapter, Track } from "../adapters/types";
+import type { Db } from "../db";
 import { cacheKey } from "../matcher/normalize";
 import { matchTrack, type MatchResult } from "../matcher/match";
 
@@ -39,7 +40,7 @@ export interface JobState {
 }
 
 export interface EngineDeps {
-  db: D1Database;
+  db: Db;
   source?: PlatformAdapter; // missing when the source is an uploaded file
   dest: PlatformAdapter;
   withSourceToken: <T>(fn: (token: string) => Promise<T>) => Promise<T>;
@@ -65,7 +66,7 @@ export function matchesPerStep(dest: Platform): number {
 }
 
 /** Saves one transfer_selections row per selection, with one query. */
-export async function insertSelections(db: D1Database, jobId: string, selections: Selection[], readDone: boolean) {
+export async function insertSelections(db: Db, jobId: string, selections: Selection[], readDone: boolean) {
   const rows = selections.map((s, i) => ({ i, k: s.kind, n: s.name, s: s.id ?? null, t: s.targetPlaylistId ?? null }));
   await db
     .prepare(
@@ -78,7 +79,7 @@ export async function insertSelections(db: D1Database, jobId: string, selections
 }
 
 /** Where to pick up: the first selection (from `fromSel` on) that still has work to do. */
-export async function selectionState(db: D1Database, spec: JobSpec, fromSel: number): Promise<JobState | null> {
+export async function selectionState(db: Db, spec: JobSpec, fromSel: number): Promise<JobState | null> {
   const row = await db
     .prepare(
       `SELECT sel_index, read_done, dest_playlist_id FROM transfer_selections
@@ -120,7 +121,7 @@ function cleanRow(t: Track) {
 }
 
 /** Inserts many songs with one query (keeps us far below the per-step query limit). */
-export async function insertTracks(db: D1Database, jobId: string, sel: number, startPosition: number, tracks: Track[]) {
+export async function insertTracks(db: Db, jobId: string, sel: number, startPosition: number, tracks: Track[]) {
   for (let i = 0; i < tracks.length; i += 200) {
     const rows = tracks.slice(i, i + 200).map((t, j) => ({ p: startPosition + i + j, ...cleanRow(t) }));
     await db
@@ -135,7 +136,7 @@ export async function insertTracks(db: D1Database, jobId: string, sel: number, s
 }
 
 /** For Auto-Sync: drops songs this sync has already handled before. */
-async function unseenOnly(db: D1Database, syncId: string, tracks: Track[]): Promise<Track[]> {
+async function unseenOnly(db: Db, syncId: string, tracks: Track[]): Promise<Track[]> {
   if (!tracks.length) return tracks;
   const keys = tracks.map((t) => cleanRow(t).k);
   const { results } = await db

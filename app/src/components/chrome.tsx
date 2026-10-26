@@ -1,4 +1,6 @@
-// The frame around every screen: header, bottom tabs, offline bar, toasts, footer.
+// The frame around every screen: header, bottom tabs, offline bar, toasts, footer, page-visit counting.
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { ArrowLeftRight, House, RefreshCw, UserRound, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
@@ -75,6 +77,24 @@ function Footer() {
   );
 }
 
+/** Never sends the sign-in page, or any address's ?part (it can hold a sign-in token or a transfer id). */
+function privateUrl<T extends { url: string }>(event: T): T | null {
+  const url = new URL(event.url);
+  if (url.pathname === "/login") return null;
+  return { ...event, url: url.origin + url.pathname };
+}
+
+/** Vercel Web Analytics and Speed Insights: cookie-free, counted in total only. Not on the sign-in page. */
+function Measure() {
+  if (useLocation().pathname === "/login") return null;
+  return (
+    <>
+      <Analytics beforeSend={privateUrl} />
+      <SpeedInsights beforeSend={privateUrl} />
+    </>
+  );
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -105,6 +125,7 @@ export function PublicLayout() {
       </main>
       <Footer />
       <Toasts />
+      <Measure />
     </div>
   );
 }
@@ -184,6 +205,7 @@ export function AppLayout() {
         </div>
       </nav>
       <Toasts />
+      <Measure />
     </div>
   );
 }

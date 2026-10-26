@@ -27,7 +27,7 @@ This one file holds the six planning parts for the app (PRD, TRD, App Flow, UI/U
 | A-03 | Works like an app on a phone | Bottom tab bar, taps at least 44 px, safe areas respected (notch, home bar), no sideways scrolling at 375 px. |
 | A-04 | Opens with no internet | The app shell loads from the phone and a clear "You're offline" bar shows. Nothing pretends to work. |
 | A-05 | Same features as today | Everything in v1.0–v1.2 works: magic-link sign-in, connect, the 4-step move, live results, Fix / Skip / Try again / Stop, add to an existing playlist, Keep in sync, back up to a file, Premium, delete account. |
-| A-06 | Old links keep working | Email sign-in links (`/login?token=…`), app-connect returns (`/dashboard?connected=…`), payment returns (`/dashboard?premium=thanks`) and `/results?job=…` all open the right screen. |
+| A-06 | Old links keep working | Email sign-in links (`/login?token=…`), app-connect returns (`/dashboard?connected=…`), payment returns (`/account?premium=thanks`) and `/results?job=…` all open the right screen. |
 | A-07 | Updates arrive by themselves | A new version replaces the old one on the next visit, so nobody gets stuck on an old copy. |
 
 **Not in scope:** push notifications, offline transfers (moving songs always needs the server), and app-store packaging.
@@ -43,12 +43,13 @@ This one file holds the six planning parts for the app (PRD, TRD, App Flow, UI/U
 | Routing | React Router v7 (the skill's default is v6; v7 fixes a security warning in v6 and works the same for this app) | Keeps the same paths as the old pages (A-06). |
 | Icons | Lucide React | One consistent icon set. |
 | Font | Inter, bundled with the app (`@fontsource-variable/inter`) | Works offline, with no outside font server. |
-| Server / DB | **Unchanged**: the Cloudflare Worker + D1 + Durable Object | The skill's default is Supabase. We keep the server we already have, because it holds every account, key and sync. |
-| Hosting | The same Worker serves the built app from `dist/` | One URL, so cookies and sign-in stay the same. No CORS. |
+| Server / DB | **Unchanged API**: one Vercel function (`api/[...path].ts`) + Turso + the cron job runner | The skill's default is Supabase. We keep the server we already have, because it holds every account, key and sync. |
+| Hosting | Vercel serves the built app from `dist/` next to `/api/*` | One URL, so cookies and sign-in stay the same. No CORS. |
 
 **Important settings**
-- `wrangler.jsonc` `assets.directory = ./dist`, `not_found_handling = "single-page-application"` (any page path loads the app), `run_worker_first = ["/api/*"]`.
-- `wrangler.jsonc` `build.command = "npm run build"`, so `wrangler dev` and `wrangler deploy` always build the app first.
+- `vercel.json` `outputDirectory = "dist"`, and a rewrite sends every path except `/api/*` and `/_vercel/*` to `/index.html` (any page path loads the app).
+- `vercel.json` `buildCommand = "npm run build"` (database changes, then the app). `npm run dev` builds the app, then starts `vercel dev` on port 8787.
+- `vercel.json` marks `sw.js`, `registerSW.js`, `manifest.webmanifest` and `index.html` `no-cache`, so a new version is picked up on the next visit (A-07).
 - The service worker **never** handles `/api/*`. This matters because connecting an app goes to `/api/connect/...` and back through `/api/callback/...`. If the service worker answered those, connecting would break. `navigateFallbackDenylist: [/^\/api\//]` and no runtime caching of the API.
 - CSP stays strict (`script-src 'self'`). Vite emits only files, never inline scripts.
 - `index.html` contains only HTML. All behaviour lives in `app/src/**/*.tsx` / `*.ts`.
@@ -99,7 +100,7 @@ anything else      "Lost the beat" page
 
 | Phase | What | Status |
 |---|---|---|
-| 5.1 | Tooling: Vite + React + TS + Tailwind + PWA plugin, `app/` folder, `dist/` build, Worker serves it | ✅ |
+| 5.1 | Tooling: Vite + React + TS + Tailwind + PWA plugin, `app/` folder, `dist/` build, served by the host | ✅ |
 | 5.2 | Shared code: `api.ts`, `formats.ts` (moved from `public/js`), platform names, session + toast stores | ✅ |
 | 5.3 | Layout: header, bottom tabs, offline bar, toasts, install prompt (Android + iPhone guide) | ✅ |
 | 5.4 | Screens: Welcome, Login, Home, Move, Results (+ Fix dialog), Syncs, Account, Back up, Privacy, Terms, Not found | ✅ |

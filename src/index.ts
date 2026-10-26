@@ -1,4 +1,5 @@
-// mix n match: the Worker. Serves /api/* and leaves every other path to the files in /public.
+// mix n match: the server code. Vercel serves the built app (dist/) itself; this handles /api/*.
+import { timingSafeEqual } from "node:crypto";
 import { getAdapter, isPlatform, platformList } from "./adapters/registry";
 import type { Page, Platform, Playlist, Track } from "./adapters/types";
 import { consumeMagicLink, normalizeEmail, requestMagicLink } from "./auth/magic-link";
@@ -11,12 +12,14 @@ import { isPremium, limitsFor } from "./plans";
 import { billingEnabled, deleteStripeCustomer, handleWebhook, openPortal, startCheckout } from "./routes/billing";
 import { fixItem, searchForItem, skipItem } from "./routes/fix";
 import { cancelJob, createJob, getJob, listJobItems, listJobs, retryJob } from "./routes/jobs";
+import { runDueJobs } from "./jobs/runner";
 import { createSync, deleteSync, listSyncs, reactivateSyncs, runDueSyncs, updateSync } from "./routes/syncs";
 import { audit, clientIp, HttpError, json, readJson, redirect, requireSameOrigin } from "./web";
 
-export { TransferJob } from "./jobs/transfer-job";
-
 const OAUTH_STATE_MINUTES = 10;
+// Vercel calls the cron every minute. Each call may run transfer steps for this long
+// (the function may run for up to 300 seconds, see vercel.json).
+const CRON_BUDGET_MS = 150_000;
 
 function platformParam(value: string): Platform {
   if (!isPlatform(value)) throw new HttpError(404, "Unknown music service");
@@ -24,13 +27,13 @@ function platformParam(value: string): Platform {
 }
 
 const JOB = "([0-9a-f-]{36})";
-const SYNC_CRON = "7 * * * *";
 
 async function handleApi(request: Request, env: Env, url: URL): Promise<Response> {
   const path = url.pathname.replace(/\/+$/, "");
   const method = request.method;
   // Stripe calls this itself (no cookie, no X-Requested-With); it is checked by signature instead.
   if (path === "/api/billing/webhook" && method === "POST") return handleWebhook(env, request);
+  if (path === "/api/cron/tick" && method === "GET") return runCron(env, request);
   requireSameOrigin(request);
   const ip = clientIp(request);
   let m: RegExpMatchArray | null;
@@ -241,22 +244,38 @@ export async function cleanup(env: Env, now = Date.now()): Promise<void> {
   ]);
 }
 
-export default {
-  async fetch(request, env, ctx): Promise<Response> {
-    const url = new URL(request.url);
-    if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
-    try {
-      return await handleApi(request, env, url);
-    } catch (err) {
-      // Browser navigations (connect/callback) should land on a page, not raw JSON.
-      if (err instanceof HttpError && err.status === 401 && request.method === "GET" && /^\/api\/(connect|callback)\//.test(url.pathname)) {
-        return redirect("/login");
-      }
-      return errorResponse(err);
+/** Every /api/* request comes in here (through api/[...path].ts). */
+export async function handle(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  if (!url.pathname.startsWith("/api/")) return new Response("Not found", { status: 404 });
+  try {
+    return await handleApi(request, env, url);
+  } catch (err) {
+    // Browser navigations (connect/callback) should land on a page, not raw JSON.
+    if (err instanceof HttpError && err.status === 401 && request.method === "GET" && /^\/api\/(connect|callback)\//.test(url.pathname)) {
+      return redirect("/login");
     }
-  },
+    return errorResponse(err);
+  }
+}
 
-  async scheduled(event, env, ctx): Promise<void> {
-    ctx.waitUntil(event.cron === SYNC_CRON ? runDueSyncs(env).then(() => undefined) : cleanup(env));
-  },
-} satisfies ExportedHandler<Env>;
+/** Only Vercel knows this secret. Vercel sends it with every cron call; nobody else gets in. */
+function isFromVercelCron(request: Request, secret: string | undefined): boolean {
+  if (!secret) return false;
+  const given = Buffer.from(request.headers.get("Authorization") ?? "");
+  const expected = Buffer.from(`Bearer ${secret}`);
+  return given.length === expected.length && timingSafeEqual(given, expected);
+}
+
+/**
+ * Runs once a minute (vercel.json). Clean-up at 03:17 UTC, then due Auto-Syncs,
+ * then as many transfer steps as fit in the time budget.
+ */
+async function runCron(env: Env, request: Request): Promise<Response> {
+  if (!isFromVercelCron(request, env.CRON_SECRET)) throw new HttpError(401, "Not allowed");
+  const now = new Date();
+  if (now.getUTCHours() === 3 && now.getUTCMinutes() === 17) await cleanup(env);
+  const syncs = await runDueSyncs(env);
+  const steps = await runDueJobs(env, CRON_BUDGET_MS);
+  return json({ ok: true, syncs, steps });
+}
