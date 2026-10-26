@@ -3,7 +3,7 @@
 **Product:** mix n match — a website that moves your playlists and liked songs from one music app to another.
 
 ## The problem
-There is no "export to another app" button between music services. People who switch apps lose years of playlists and liked songs. Tools that exist (Soundiiz, TuneMyMusic) limit tracks, charge subscriptions, or hide which songs failed.
+There is no "export to another app" button between music services. People who switch apps lose years of playlists and liked songs. Tools that exist (Soundiiz, TuneMyMusic) limit tracks, charge subscriptions, or hide which songs failed. A comparison with FreeYourMusic, Soundiiz, TuneMyMusic and SongShift, and what to build next because of it, is in [11-spec-v1.3.md](11-spec-v1.3.md).
 
 ## Who it is for
 | Person | What they want |

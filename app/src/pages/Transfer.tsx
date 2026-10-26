@@ -400,7 +400,7 @@ export default function Transfer() {
         </Notice>
       ) : null}
 
-      <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0">
+      <div className="sticky bottom-[calc(61px+env(safe-area-inset-bottom))] z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0">
         {step > 1 ? (
           <Button variant="ghost" id="back" onClick={() => show(step - 1)}>
             Back

@@ -1,6 +1,5 @@
-// Shared set-up for route and job tests: a test database, a signed-in user with the
-// Demo service connected, and a fake Durable Object namespace that records what was started.
-import { vi } from "vitest";
+// Shared set-up for route and job tests: a test database and a signed-in user with the
+// Demo service connected. Transfers are read back from the job_runs table.
 import { toBase64 } from "../src/crypto";
 import { saveConnection } from "../src/connections";
 import { createMockAdapter } from "../src/adapters/mock";
@@ -14,22 +13,21 @@ export const direct = <T>(fn: (t: string) => Promise<T>) => fn("token");
 export async function testEnv() {
   const DB = createTestDb();
   DB.raw.prepare("INSERT INTO users (id, email, created_at) VALUES ('u1', 'x@example.com', 0)").run();
-  const started: { spec: JobSpec; state?: JobState }[] = [];
-  const cancelled: string[] = [];
-  const env: any = {
-    DB,
-    TOKEN_KEY: KEY,
-    ENABLE_MOCK: "1",
-    TRANSFER_JOB: {
-      idFromName: (name: string) => name,
-      get: (id: string) => ({
-        start: vi.fn(async (spec: JobSpec, state?: JobState) => void started.push({ spec, state })),
-        cancel: vi.fn(async () => void cancelled.push(id)),
-      }),
-    },
-  };
+  const env: any = { DB, TOKEN_KEY: KEY, ENABLE_MOCK: "1" };
   await saveConnection(env, "u1", "mock", { accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000 });
-  return { env, db: DB, started, cancelled };
+  return { env, db: DB };
+}
+
+/** The run the job runner is holding for a job: null once it has finished or been stopped. */
+export function runFor(db: any, jobId: string): { spec: JobSpec; state: JobState } | null {
+  const row = db.raw.prepare("SELECT spec, state FROM job_runs WHERE job_id = ?").get(jobId);
+  return row ? { spec: JSON.parse(row.spec), state: JSON.parse(row.state) } : null;
+}
+
+/** The run that was scheduled most recently, whatever job it belongs to. */
+export function latestRun(db: any): { spec: JobSpec; state: JobState } | null {
+  const row = db.raw.prepare("SELECT spec, state FROM job_runs ORDER BY rowid DESC LIMIT 1").get();
+  return row ? { spec: JSON.parse(row.spec), state: JSON.parse(row.state) } : null;
 }
 
 /** Inserts a job + its selections the way createJob does. */
@@ -44,7 +42,7 @@ export async function addJob(db: any, spec: Partial<JobSpec> & { selections: Sel
   return full;
 }
 
-/** Runs a job to the end (or until `stopAt` says stop), like the Durable Object would. */
+/** Runs a job to the end (or until `stopAt` says stop), one step at a time. */
 export async function runJob(spec: JobSpec, deps: any, state: JobState | null = initialState(spec), stopAt?: (s: JobState) => boolean) {
   let steps = 0;
   let maxQueries = 0;

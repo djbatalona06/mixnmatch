@@ -60,7 +60,7 @@ describe("transfer engine", () => {
       withDestToken: direct,
     });
     expect(finished).toBe(true);
-    // Stays far below Cloudflare's free-plan limit of 50 queries per run.
+    // Stays small, so one job runner step never needs many database round trips.
     expect(maxQueriesInStep).toBeLessThan(15);
 
     const counts = Object.fromEntries(

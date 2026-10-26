@@ -1,4 +1,6 @@
-// The frame around every screen: header, bottom tabs, offline bar, toasts, footer.
+// The frame around every screen: header, bottom tabs, offline bar, toasts, footer, page-visit counting.
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { ArrowLeftRight, House, RefreshCw, UserRound, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
@@ -16,7 +18,7 @@ const TABS = [
 
 function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+    <Link to="/" className="flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap text-lg font-semibold tracking-tight">
       <img src="/favicon.svg" alt="" className="h-7 w-7" />
       mix n match
     </Link>
@@ -64,14 +66,32 @@ function Footer() {
     <footer className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm text-muted">
       <span>mix n match</span>
       <span className="flex gap-4">
-        <Link to="/privacy" className="hover:text-fg">
+        <Link to="/privacy" className="inline-flex min-h-[44px] items-center hover:text-fg">
           Privacy
         </Link>
-        <Link to="/terms" className="hover:text-fg">
+        <Link to="/terms" className="inline-flex min-h-[44px] items-center hover:text-fg">
           Terms
         </Link>
       </span>
     </footer>
+  );
+}
+
+/** Never sends the sign-in page, or any address's ?part (it can hold a sign-in token or a transfer id). */
+function privateUrl<T extends { url: string }>(event: T): T | null {
+  const url = new URL(event.url);
+  if (url.pathname === "/login") return null;
+  return { ...event, url: url.origin + url.pathname };
+}
+
+/** Vercel Web Analytics and Speed Insights: cookie-free, counted in total only. Not on the sign-in page. */
+function Measure() {
+  if (useLocation().pathname === "/login") return null;
+  return (
+    <>
+      <Analytics beforeSend={privateUrl} />
+      <SpeedInsights beforeSend={privateUrl} />
+    </>
   );
 }
 
@@ -105,6 +125,7 @@ export function PublicLayout() {
       </main>
       <Footer />
       <Toasts />
+      <Measure />
     </div>
   );
 }
@@ -138,7 +159,7 @@ export function AppLayout() {
           </nav>
           <div className="hidden items-center gap-3 md:flex">
             {me ? (
-              <span className="max-w-[16rem] truncate text-sm text-muted" title={me.email}>
+              <span className="hidden max-w-[16rem] truncate text-sm text-muted lg:block" title={me.email}>
                 {me.email}
               </span>
             ) : null}
@@ -184,6 +205,7 @@ export function AppLayout() {
         </div>
       </nav>
       <Toasts />
+      <Measure />
     </div>
   );
 }

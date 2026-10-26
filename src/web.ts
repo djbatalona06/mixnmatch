@@ -38,7 +38,8 @@ export async function readJson<T>(request: Request, maxBytes = 64 * 1024): Promi
 }
 
 export function clientIp(request: Request): string | null {
-  return request.headers.get("CF-Connecting-IP");
+  // Vercel sets these headers itself. Unlike x-forwarded-for, a visitor cannot fake them.
+  return request.headers.get("x-vercel-forwarded-for") ?? request.headers.get("x-real-ip");
 }
 
 export async function audit(env: Env, userId: string | null, action: string, detail: string | null, ip: string | null) {

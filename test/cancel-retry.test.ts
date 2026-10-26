@@ -3,8 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { createMockAdapter } from "../src/adapters/mock";
 import { AuthError } from "../src/http";
 import { initialState, type JobSpec } from "../src/jobs/engine";
+import { startJobRun, stepJob } from "../src/jobs/runner";
 import { cancelJob, retryJob } from "../src/routes/jobs";
-import { addJob, all, mockDeps, one, runJob, testEnv, USER } from "./helpers";
+import { addJob, all, mockDeps, one, runFor, runJob, testEnv, USER } from "./helpers";
 
 const shared = vi.hoisted(() => ({ adapters: {} as Record<string, any> }));
 vi.mock("../src/adapters/registry", async (original) => {
@@ -12,58 +13,40 @@ vi.mock("../src/adapters/registry", async (original) => {
   return { ...real, getAdapter: (env: any, p: string, f?: any) => shared.adapters[p] ?? real.getAdapter(env, p, f) };
 });
 
-const { TransferJob } = await import("../src/jobs/transfer-job");
-
-/** A Durable Object with in-memory storage; `alarmAt` is when it asked to wake up next. */
-function makeJobObject(env: any) {
-  const store = new Map<string, unknown>();
-  const ctx = {
-    alarmAt: null as number | null,
-    storage: {
-      get: async (k: string) => structuredClone(store.get(k)),
-      put: async (k: string, v: unknown) => void store.set(k, structuredClone(v)),
-      deleteAll: async () => void store.clear(),
-      setAlarm: async (t: number) => void (ctx.alarmAt = t),
-      deleteAlarm: async () => void (ctx.alarmAt = null),
-    },
-  };
-  return { job: new TransferJob(ctx as any, env), ctx, store };
-}
-
 describe("Stop", () => {
   it("stops further writes, even when Stop arrives in the middle of a step", async () => {
     const { env, db } = await testEnv();
     const dest = createMockAdapter();
     shared.adapters.mock = dest;
     const spec = await addJob(db, { selections: [{ kind: "playlist", id: "road-trip", name: "Road Trip" }] });
-    const { job, ctx } = makeJobObject(env);
-    await job.start(spec);
+    await startJobRun(env, spec);
 
     // Run until it is writing, then press Stop while a write is in flight.
     let writes = 0;
     dest.addTracksToPlaylist = async () => {
       writes++;
-      if (writes === 2) await job.cancel();
+      if (writes === 2) await cancelJob(env, USER, spec.jobId);
     };
-    for (let i = 0; i < 500 && ctx.alarmAt !== null; i++) await job.alarm();
+    for (let i = 0; i < 500 && runFor(db, spec.jobId); i++) await stepJob(env, spec.jobId);
 
     expect(writes).toBe(2);
-    expect(ctx.alarmAt).toBeNull(); // nothing scheduled any more
+    expect(runFor(db, spec.jobId)).toBeNull(); // nothing scheduled any more
     const row = one(db, "SELECT status, message FROM transfer_jobs WHERE id = ?", spec.jobId);
     expect(row.status).toBe("CANCELLED");
     expect(row.message).toMatch(/Stopped/);
 
-    // A stray alarm afterwards does nothing.
-    await job.alarm();
+    // A stray step afterwards does nothing.
+    expect(await stepJob(env, spec.jobId)).toBe(false);
     expect(writes).toBe(2);
   });
 
   it("only the owner can stop, and only while running", async () => {
-    const { env, db, cancelled } = await testEnv();
+    const { env, db } = await testEnv();
     const spec = await addJob(db, { selections: [{ kind: "liked", name: "Liked Songs" }] }, "RUNNING");
+    await startJobRun(env, spec);
     await expect(cancelJob(env, { ...USER, id: "someone-else" }, spec.jobId)).rejects.toMatchObject({ status: 404 });
     await cancelJob(env, USER, spec.jobId);
-    expect(cancelled).toEqual([spec.jobId]);
+    expect(runFor(db, spec.jobId)).toBeNull();
     expect(one(db, "SELECT status FROM transfer_jobs").status).toBe("CANCELLED");
     await expect(cancelJob(env, USER, spec.jobId)).rejects.toMatchObject({ status: 409 });
   });
@@ -71,7 +54,7 @@ describe("Stop", () => {
 
 describe("Try again", () => {
   it("never re-reads songs and never makes a second playlist", async () => {
-    const { env, db, started } = await testEnv();
+    const { env, db } = await testEnv();
     const spec = await addJob(db, { selections: [{ kind: "playlist", id: "gym", name: "Gym" }] });
     const source = createMockAdapter();
     const dest = createMockAdapter();
@@ -84,7 +67,7 @@ describe("Try again", () => {
 
     await retryJob(env, USER, spec.jobId, { includeUnsure: true });
     expect(one(db, "SELECT status FROM transfer_jobs").status).toBe("QUEUED");
-    const { spec: again, state } = started.at(-1)!;
+    const { spec: again, state } = runFor(db, spec.jobId)!;
     expect(state).toMatchObject({ sel: 0, phase: "match", destPlaylistId: playlistId });
 
     const reads = vi.spyOn(source, "getPlaylistTracks");
@@ -97,7 +80,7 @@ describe("Try again", () => {
   });
 
   it("resumes where it stopped after the user had to reconnect a service", async () => {
-    const { env, db, started } = await testEnv();
+    const { env, db } = await testEnv();
     const spec = await addJob(db, {
       selections: [
         { kind: "playlist", id: "chill", name: "Chill" },
@@ -121,9 +104,9 @@ describe("Try again", () => {
     // Reconnected: Try again picks up at "Gym", reusing the playlist it already made.
     dest.addTracksToPlaylist = add as any;
     await retryJob(env, USER, spec.jobId, {});
-    const resumed = started.at(-1)!;
+    const resumed = runFor(db, spec.jobId)!;
     expect(resumed.state).toMatchObject({ sel: 1, phase: "match" });
-    expect(resumed.state!.destPlaylistId).toBeTruthy();
+    expect(resumed.state.destPlaylistId).toBeTruthy();
     const reads = vi.spyOn(source, "getPlaylistTracks");
     await runJob(resumed.spec as JobSpec, deps, resumed.state);
 

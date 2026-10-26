@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createMockAdapter } from "../src/adapters/mock";
 import type { Track } from "../src/adapters/types";
 import { createSync, finishSyncRun, reactivateSyncs, runDueSyncs, SYNCS_PER_CRON } from "../src/routes/syncs";
-import { addJob, all, mockDeps, one, runJob, testEnv, USER } from "./helpers";
+import { addJob, all, latestRun, mockDeps, one, runJob, testEnv, USER } from "./helpers";
 
 const DAY = 86400_000;
 
@@ -37,10 +37,9 @@ async function syncedPlaylist(startSongs = 10) {
 /** Pretend a day passed and the hourly cron fired, then run the started job to the end. */
 async function runOneDay(t: Awaited<ReturnType<typeof syncedPlaylist>>) {
   const now = Date.now() + DAY + 1000;
-  const startedBefore = t.started.length;
-  await runDueSyncs(t.env, now);
-  if (t.started.length === startedBefore) return null;
-  const { spec, state } = t.started.at(-1)!;
+  const started = await runDueSyncs(t.env, now);
+  if (!started) return null;
+  const { spec, state } = latestRun(t.db)!;
   await runJob(spec, mockDeps(t.db, t.dest, t.source), state);
   t.db.raw.prepare("UPDATE transfer_jobs SET status = 'DONE' WHERE id = ?").run(spec.jobId);
   await finishSyncRun(t.env, spec, "DONE", undefined, now);
@@ -79,7 +78,7 @@ describe("Auto-Sync", () => {
     const t = await syncedPlaylist(5);
     await addJob(t.db, { selections: [{ kind: "liked", name: "Liked Songs" }] }, "RUNNING");
     expect(await runDueSyncs(t.env, Date.now() + DAY + 1000)).toBe(0);
-    expect(t.started).toHaveLength(0);
+    expect(all(t.db, "SELECT job_id FROM job_runs")).toHaveLength(0);
   });
 
   it("asks the user to reconnect after an access problem, and starts again once they do", async () => {
@@ -134,7 +133,8 @@ describe("Auto-Sync", () => {
     const startedCount = await runDueSyncs(t.env, Date.now());
     expect(t.db.counter.queries - before).toBeLessThan(15);
     expect(startedCount).toBeLessThanOrEqual(SYNCS_PER_CRON);
-    expect(new Set(t.started.map((s) => s.spec.userId)).size).toBe(startedCount);
+    const runUsers = all(t.db, "SELECT spec FROM job_runs").map((r) => JSON.parse(r.spec).userId);
+    expect(new Set(runUsers).size).toBe(startedCount);
     expect(all(t.db, "SELECT COUNT(*) AS n FROM transfer_jobs WHERE sync_id IS NOT NULL")[0].n).toBe(startedCount);
     expect(all(t.db, "SELECT COUNT(*) AS n FROM transfer_selections")[0].n).toBe(startedCount);
   });

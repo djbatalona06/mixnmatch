@@ -58,7 +58,11 @@ export function Privacy() {
 
       <h2>Who helps us run mix n match</h2>
       <ul>
-        <li>Cloudflare hosts the app and database.</li>
+        <li>
+          Vercel hosts the app and the server code. Vercel Web Analytics and Speed Insights count visits and page speed. They use no cookies, and we
+          use them only in total, not to identify you. The sign-in page is not measured, because its link carries a secret.
+        </li>
+        <li>Turso stores the database (songs, results and account details).</li>
         <li>Resend delivers sign-in emails.</li>
         <li>Stripe handles Premium payments (only if you buy Premium).</li>
         <li>The music apps you connect (Spotify, TIDAL, Deezer, Google/YouTube, SoundCloud) receive requests made on your behalf.</li>
