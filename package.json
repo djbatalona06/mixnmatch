@@ -15,7 +15,8 @@
     "test": "vitest run",
     "smoke": "node test/smoke.mjs",
     "smoke:deploy": "node scripts/smoke-deploy.mjs",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "layout:check": "vite build --config app/vite.config.ts && node test/layout.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

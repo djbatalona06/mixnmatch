@@ -115,6 +115,11 @@ This opens a robot web browser and clicks through the whole app.
 It needs `npm run dev` to be running in another window.
 
 ```bash
+npm run layout:check
+```
+This opens every screen at phone, tablet and desktop size and measures it: nothing sticks out sideways, the edges line up, buttons are big enough to tap, and nothing hides under the bottom tabs. It needs nothing else running. Open `test-results/layout/report.html` to see the screenshots, and [docs/layout-board.html](docs/layout-board.html) for the plan of each screen.
+
+```bash
 npm run smoke:deploy -- https://your-site.vercel.app
 ```
 This checks a **live** site: the pages, the API, the security headers, and the analytics. It only reads, so it is safe to run any time. A GitHub workflow runs it after every deploy.

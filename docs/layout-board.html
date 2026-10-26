@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layout board</title>
+  <link rel="stylesheet" href="layout-board.css">
+  <script defer src="layout-board.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>mix n match layout board</h1>
+    <p>
+      The plan for every screen. Think of each screen as 12 equal strips side by side. Every box says how many strips it uses, at phone, tablet and desktop
+      width. The real app is measured against the rules by <code>npm run layout:check</code>, which writes
+      <a href="../test-results/layout/report.html">the measured report</a> with screenshots.
+    </p>
+    <div class="widths" role="group" aria-label="Screen width">
+      <button type="button" data-width="phone" aria-pressed="true">Phone <small>375px</small></button>
+      <button type="button" data-width="tablet" aria-pressed="false">Tablet <small>768px</small></button>
+      <button type="button" data-width="desktop" aria-pressed="false">Desktop <small>1280px</small></button>
+    </div>
+    <div class="legend">
+      <span><span class="swatch gut"></span>16px side gutter</span>
+      <span><span class="swatch col"></span>one of the 12 columns</span>
+      <span><span class="swatch prt"></span>a part of the screen</span>
+      <span>Showing: <strong data-width-name>phone (375px)</strong></span>
+    </div>
+  </header>
+
+  <main>
+    <nav class="tabs" role="tablist" aria-label="Screens">
+      <button role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="true">Rules</button>
+      <button role="tab" id="tab-chrome" aria-controls="panel-chrome" aria-selected="false">Shared frame</button>
+      <button role="tab" id="tab-landing" aria-controls="panel-landing" aria-selected="false">Landing</button>
+      <button role="tab" id="tab-login" aria-controls="panel-login" aria-selected="false">Login</button>
+      <button role="tab" id="tab-privacy" aria-controls="panel-privacy" aria-selected="false">Privacy</button>
+      <button role="tab" id="tab-terms" aria-controls="panel-terms" aria-selected="false">Terms</button>
+      <button role="tab" id="tab-notfound" aria-controls="panel-notfound" aria-selected="false">Not found</button>
+      <button role="tab" id="tab-dashboard" aria-controls="panel-dashboard" aria-selected="false">Home</button>
+      <button role="tab" id="tab-transfer" aria-controls="panel-transfer" aria-selected="false">Move</button>
+      <button role="tab" id="tab-results" aria-controls="panel-results" aria-selected="false">Results</button>
+      <button role="tab" id="tab-syncs" aria-controls="panel-syncs" aria-selected="false">Syncs</button>
+      <button role="tab" id="tab-account" aria-controls="panel-account" aria-selected="false">Account</button>
+      <button role="tab" id="tab-export" aria-controls="panel-export" aria-selected="false">Back up</button>
+    </nav>
+
+    <!-- ===================== Rules ===================== -->
+    <section class="panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules">
+      <h2>The rules every screen follows</h2>
+      <p>Each rule is measured on the real app at all three widths. The check fails if any screen breaks one.</p>
+      <table>
+        <thead>
+          <tr><th>Rule</th><th>The number</th><th>Where it is set</th><th>How it is measured</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Side gutter</td>
+            <td>16px on each side</td>
+            <td><code>px-4</code> on the header row and on <code>&lt;main&gt;</code> (<code>app/src/components/chrome.tsx</code>)</td>
+            <td>On a phone, the content starts exactly 16px from the left edge. (<code>side-gutter</code>)</td>
+          </tr>
+          <tr>
+            <td>Content width</td>
+            <td>at most 72rem (1152px)</td>
+            <td><code>max-w-6xl mx-auto</code> on the header row, <code>&lt;main&gt;</code> and the footer</td>
+            <td>The content area is never wider than 1152px. (<code>max-width</code>)</td>
+          </tr>
+          <tr>
+            <td>Header lines up</td>
+            <td>same left edge</td>
+            <td>The header row and <code>&lt;main&gt;</code> use the same width and gutter</td>
+            <td>The header's left edge matches the content's left edge, at every width. (<code>header-lines-up</code>)</td>
+          </tr>
+          <tr>
+            <td>Easy to tap</td>
+            <td>at least 44px tall on a phone</td>
+            <td><code>min-h-[44px]</code>; small buttons are 44px on phones and 40px from 768px up (<code>app/src/components/ui.tsx</code>)</td>
+            <td>Every link, button, field, tab and checkbox label on a phone. Links inside a sentence are allowed to be smaller. (<code>tap-size</code>)</td>
+          </tr>
+          <tr>
+            <td>Clear of the bottom tabs</td>
+            <td>tabs are 60px + a 1px line; the page keeps 112px free below</td>
+            <td><code>pb-28</code> on <code>&lt;main&gt;</code>; floating bars sit 61px up (<code>bottom-[calc(61px+…)]</code>)</td>
+            <td>On a phone, the end of the page and any floating bar stay above the tabs. (<code>tab-bar-clearance</code>)</td>
+          </tr>
+          <tr>
+            <td>No sideways scrolling</td>
+            <td>page width = window width</td>
+            <td>Long names use <code>truncate</code> or <code>break-all</code>; wide rows wrap</td>
+            <td>The page is never wider than the window. (<code>no-sideways-scroll</code>)</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2>Widths</h2>
+      <table>
+        <thead>
+          <tr><th>Name here</th><th>Width</th><th>Tailwind steps that are switched on</th><th>What changes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Phone</td><td>375px</td><td>none (phone first)</td><td>Bottom tabs, one column, small buttons 44px tall</td></tr>
+          <tr><td>Tablet</td><td>768px</td><td><code>sm</code> (640px) and <code>md</code> (768px)</td><td>Tabs move to the header, bottom tabs go away, two columns</td></tr>
+          <tr><td>Desktop</td><td>1280px</td><td><code>sm</code>, <code>md</code> and <code>lg</code> (1024px)</td><td>Email shows in the header, three to five columns</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ===================== Shared frame ===================== -->
+    <section class="panel" role="tabpanel" id="panel-chrome" aria-labelledby="tab-chrome" hidden>
+      <p>The frame around every signed-in screen (<code>AppLayout</code>). The offline bar shows only when the phone has no internet. Public screens (Landing, Login, Privacy, Terms) use a simpler header with a "Sign in" button and always show the footer.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="offline">Offline bar: full width, outside the 72rem box</div>
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="12" data-t="3" data-d="2">Logo <span class="src">min-h-[44px] whitespace-nowrap</span></div>
+              <div class="part thin" data-p="none" data-t="6" data-d="5">Tabs: Home · Move · Syncs · Account <span class="src">hidden md:flex</span></div>
+              <div class="part thin" data-p="none" data-t="none" data-d="3">Your email <span class="src">hidden lg:block, cut off with …</span></div>
+              <div class="part thin" data-p="none" data-t="3" data-d="2">Sign out <span class="src">hidden md:flex</span></div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part xl" data-p="12" data-t="12" data-d="12">The screen's own content <span class="src">main: mx-auto max-w-6xl px-4 pt-6</span></div>
+              <div class="part accent" data-p="12" data-t="none" data-d="none">Message (toast): floats 84px up, above the tabs <span class="src">fixed inset-x-4 max-w-md</span></div>
+              <div class="part thin" data-p="12" data-t="none" data-d="none">112px kept free so nothing hides under the tabs <span class="src">pb-28 (md:pb-10)</span></div>
+            </div>
+          </div>
+          <div class="row ftr" data-p="none">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-t="4" data-d="3">Privacy · Terms <span class="src">each 44px tall</span></div>
+            </div>
+          </div>
+          <div class="tabbar" data-p="show" data-t="none" data-d="none">
+            <span>Home</span><span>Move</span><span>Syncs</span><span>Account</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Landing ===================== -->
+    <section class="panel" role="tabpanel" id="panel-landing" aria-labelledby="tab-landing" hidden>
+      <p>Address <code>/</code>. The welcome page for visitors. File: <code>app/src/pages/Landing.tsx</code>.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="8" data-t="9" data-d="10">Logo</div>
+              <div class="part thin" data-p="4" data-t="3" data-d="2">Sign in</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part l" data-p="12" data-t="7" data-d="7">Headline, intro and two buttons <span class="src">md:grid-cols-[1.3fr_1fr]</span></div>
+              <div class="part l" data-p="12" data-t="5" data-d="5">Two records picture <span class="src">max-w-xs, centered</span></div>
+              <div class="part thin" data-p="12" data-t="12" data-d="12">"How it works"</div>
+              <div class="part m" data-p="12" data-t="6" data-d="3">Step 1 Connect</div>
+              <div class="part m" data-p="12" data-t="6" data-d="3">Step 2 Pick</div>
+              <div class="part m" data-p="12" data-t="6" data-d="3">Step 3 Move</div>
+              <div class="part m" data-p="12" data-t="6" data-d="3">Step 4 Keep in sync <span class="src">sm:grid-cols-2 lg:grid-cols-4</span></div>
+              <div class="part thin" data-p="12" data-t="12" data-d="12">"Works with"</div>
+              <div class="part" data-p="12" data-t="12" data-d="12">Six service chips, wrapping onto more lines <span class="src">flex flex-wrap gap-3</span></div>
+              <div class="part thin" data-p="12" data-t="12" data-d="12">"Your music, your data"</div>
+              <div class="part m" data-p="12" data-t="6" data-d="3">No passwords</div>
+              <div class="part m" data-p="12" data-t="6" data-d="3">Locked keys</div>
+              <div class="part m" data-p="12" data-t="6" data-d="3">Song names only</div>
+              <div class="part m" data-p="12" data-t="6" data-d="3">Delete anytime</div>
+            </div>
+          </div>
+          <div class="row ftr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="6" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-p="6" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Login ===================== -->
+    <section class="panel" role="tabpanel" id="panel-login" aria-labelledby="tab-login" hidden>
+      <p>Address <code>/login</code>, and <code>/login?token=…</code> from the email link (then the card says "Welcome back" with one big button). File: <code>app/src/pages/Login.tsx</code>. No analytics on this page.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="12" data-t="12" data-d="12">Logo (no Sign in button on this page)</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part l" data-p="12" data-t="3 / 11" data-d="4 / 10">Sign-in card: title, email field, "Email me a link" <span class="src">mx-auto max-w-md (28rem)</span></div>
+              <div class="part thin" data-p="12" data-t="3 / 11" data-d="4 / 10">Notice: "Check your inbox" or the error</div>
+            </div>
+          </div>
+          <div class="row ftr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="6" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-p="6" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Privacy ===================== -->
+    <section class="panel" role="tabpanel" id="panel-privacy" aria-labelledby="tab-privacy" hidden>
+      <p>Address <code>/privacy</code>. File: <code>app/src/pages/Legal.tsx</code>. Long text reads best in a narrower column.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="8" data-t="9" data-d="10">Logo</div>
+              <div class="part thin" data-p="4" data-t="3" data-d="2">Sign in</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part thin" data-p="12" data-t="12" data-d="3 / 11">Title "Privacy"</div>
+              <div class="part xl" data-p="12" data-t="12" data-d="3 / 11">Sections with headings and lists <span class="src">mx-auto max-w-3xl (48rem)</span></div>
+            </div>
+          </div>
+          <div class="row ftr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="6" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-p="6" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Terms ===================== -->
+    <section class="panel" role="tabpanel" id="panel-terms" aria-labelledby="tab-terms" hidden>
+      <p>Address <code>/terms</code>. File: <code>app/src/pages/Legal.tsx</code>. Same shape as Privacy.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="8" data-t="9" data-d="10">Logo</div>
+              <div class="part thin" data-p="4" data-t="3" data-d="2">Sign in</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part thin" data-p="12" data-t="12" data-d="3 / 11">Title "Terms"</div>
+              <div class="part xl" data-p="12" data-t="12" data-d="3 / 11">Sections with headings and lists <span class="src">mx-auto max-w-3xl (48rem)</span></div>
+            </div>
+          </div>
+          <div class="row ftr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="6" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-p="6" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Not found ===================== -->
+    <section class="panel" role="tabpanel" id="panel-notfound" aria-labelledby="tab-notfound" hidden>
+      <p>Any address the app does not know, for example <code>/no-such-page</code>. File: <code>app/src/pages/NotFound.tsx</code>.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="8" data-t="9" data-d="10">Logo</div>
+              <div class="part thin" data-p="4" data-t="3" data-d="2">Sign in</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part l" data-p="12" data-t="3 / 11" data-d="4 / 10">"Lost the beat" card with a "Go home" button <span class="src">mx-auto max-w-md, centered text</span></div>
+            </div>
+          </div>
+          <div class="row ftr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="6" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-p="6" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Home ===================== -->
+    <section class="panel" role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard" hidden>
+      <p>Address <code>/dashboard</code>. The first screen after signing in. File: <code>app/src/pages/Dashboard.tsx</code>.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="12" data-t="3" data-d="2">Logo</div>
+              <div class="part thin" data-p="none" data-t="6" data-d="5">Tabs</div>
+              <div class="part thin" data-p="none" data-t="none" data-d="3">Your email</div>
+              <div class="part thin" data-p="none" data-t="3" data-d="2">Sign out</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part thin accent" data-p="12" data-t="12" data-d="12">Note after connecting an app (sometimes)</div>
+              <div class="part" data-p="12" data-t="7" data-d="8">"Your music" and the line under it</div>
+              <div class="part" data-p="12" data-t="5" data-d="4">Start a transfer · Back up to a file <span class="src">wrap onto two lines if needed</span></div>
+              <div class="part thin" data-p="12" data-t="12" data-d="12">"Music services"</div>
+              <div class="part m" data-p="12" data-t="6" data-d="4">Spotify card</div>
+              <div class="part m" data-p="12" data-t="6" data-d="4">TIDAL card</div>
+              <div class="part m" data-p="12" data-t="6" data-d="4">Deezer card</div>
+              <div class="part m" data-p="12" data-t="6" data-d="4">YouTube Music card</div>
+              <div class="part m" data-p="12" data-t="6" data-d="4">SoundCloud card</div>
+              <div class="part m" data-p="12" data-t="6" data-d="4">Demo Music card <span class="src">sm:grid-cols-2 lg:grid-cols-3</span></div>
+              <div class="part" data-p="12" data-t="12" data-d="12">Syncs link row</div>
+              <div class="part thin" data-p="12" data-t="12" data-d="12">"Recent transfers"</div>
+              <div class="part l" data-p="12" data-t="12" data-d="12">List of transfers: name, apps, date, status <span class="src">long names cut off with …</span></div>
+            </div>
+          </div>
+          <div class="row ftr" data-p="none">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+          <div class="tabbar" data-p="show" data-t="none" data-d="none"><span>Home</span><span>Move</span><span>Syncs</span><span>Account</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Move ===================== -->
+    <section class="panel" role="tabpanel" id="panel-transfer" aria-labelledby="tab-transfer" hidden>
+      <p>Address <code>/transfer</code>. Four steps: From, To, Choose, Review. Shown here: step 3 (Choose), the busiest one. File: <code>app/src/pages/Transfer.tsx</code>.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="12" data-t="3" data-d="2">Logo</div>
+              <div class="part thin" data-p="none" data-t="6" data-d="5">Tabs</div>
+              <div class="part thin" data-p="none" data-t="none" data-d="3">Your email</div>
+              <div class="part thin" data-p="none" data-t="3" data-d="2">Sign out</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part thin" data-p="12" data-t="12" data-d="12">"Move your music"</div>
+              <div class="part thin" data-p="3" data-t="3" data-d="3">1 From</div>
+              <div class="part thin" data-p="3" data-t="3" data-d="3">2 To</div>
+              <div class="part thin" data-p="3" data-t="3" data-d="3">3 Choose</div>
+              <div class="part thin" data-p="3" data-t="3" data-d="3">4 Review <span class="src">grid-cols-4</span></div>
+              <div class="part" data-p="12" data-t="8" data-d="9">"Pick what to move"</div>
+              <div class="part" data-p="12" data-t="4" data-d="3">Select all · Clear</div>
+              <div class="part" data-p="12" data-t="12" data-d="12">
+                Playlist covers
+                <span class="src">grid-cols-2 sm:grid-cols-3 lg:grid-cols-5</span>
+                <div class="grid tight" data-cols-p="2" data-cols-t="3" data-cols-d="5">
+                  <div class="part m">Liked Songs</div><div class="part m">Road Trip</div><div class="part m">Gym</div><div class="part m">Long name…</div><div class="part m">Chill</div>
+                </div>
+              </div>
+              <div class="part accent" data-p="12" data-t="12" data-d="12">Back · Next. On a phone it floats just above the bottom tabs <span class="src">sticky bottom-[61px] md:static</span></div>
+            </div>
+          </div>
+          <div class="row ftr" data-p="none">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+          <div class="tabbar" data-p="show" data-t="none" data-d="none"><span>Home</span><span>Move</span><span>Syncs</span><span>Account</span></div>
+        </div>
+      </div>
+      <p>Step 1 and 2: the app tiles use 12 / 6 / 4 columns (<code>sm:grid-cols-2 lg:grid-cols-3</code>). Step 4: one summary card, full width; each playlist row puts the "Where should it go?" menu under the name on phones and beside it from 640px.</p>
+    </section>
+
+    <!-- ===================== Results ===================== -->
+    <section class="panel" role="tabpanel" id="panel-results" aria-labelledby="tab-results" hidden>
+      <p>Address <code>/results?job=…</code>. Live progress, then every song's result. File: <code>app/src/pages/Results.tsx</code>.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="12" data-t="3" data-d="2">Logo</div>
+              <div class="part thin" data-p="none" data-t="6" data-d="5">Tabs</div>
+              <div class="part thin" data-p="none" data-t="none" data-d="3">Your email</div>
+              <div class="part thin" data-p="none" data-t="3" data-d="2">Sign out</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part" data-p="12" data-t="9" data-d="10">Transfer name (wraps) and "Spotify → TIDAL"</div>
+              <div class="part" data-p="12" data-t="3" data-d="2">Status · Stop</div>
+              <div class="part m" data-p="12" data-t="12" data-d="12">Progress card: phase, %, bar, Try again <span class="src">checkbox label is 44px tall</span></div>
+              <div class="part" data-p="12" data-t="12" data-d="12">
+                Numbers
+                <span class="src">grid-cols-2 sm:grid-cols-3 lg:grid-cols-5; the first box is full width on phones</span>
+                <div class="grid tight" data-cols-p="2" data-cols-t="3" data-cols-d="5">
+                  <div class="part" data-p="2" data-t="1" data-d="1">Songs found</div><div class="part">Matched</div><div class="part">Need a look</div><div class="part">Not found</div><div class="part">Already there</div>
+                </div>
+              </div>
+              <div class="part m" data-p="12" data-t="12" data-d="12">Keep it copied: one button per playlist <span class="src">long names cut off with … (max-w-full truncate)</span></div>
+              <div class="part" data-p="12" data-t="7" data-d="8">"Every song"</div>
+              <div class="part" data-p="12" data-t="5" data-d="4">Download songs that need a look (CSV)</div>
+              <div class="part" data-p="12" data-t="12" data-d="12">Filter tabs: All · Matched · Need a look · Not found · Already there · Skipped <span class="src">scroll sideways inside their own row, reaching the screen edge on phones (-mx-4 px-4)</span></div>
+              <div class="part xl" data-p="12" data-t="12" data-d="12">Song list: number · original song · song found · result and Fix <span class="src">found song sits under the original on phones, beside it from 640px</span></div>
+              <div class="part" data-p="12" data-t="12" data-d="12">Back to Home · Start another transfer</div>
+            </div>
+          </div>
+          <div class="row ftr" data-p="none">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+          <div class="tabbar" data-p="show" data-t="none" data-d="none"><span>Home</span><span>Move</span><span>Syncs</span><span>Account</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Syncs ===================== -->
+    <section class="panel" role="tabpanel" id="panel-syncs" aria-labelledby="tab-syncs" hidden>
+      <p>Address <code>/syncs</code>. Playlists kept copied every day. File: <code>app/src/pages/Syncs.tsx</code>.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="12" data-t="3" data-d="2">Logo</div>
+              <div class="part thin" data-p="none" data-t="6" data-d="5">Tabs</div>
+              <div class="part thin" data-p="none" data-t="none" data-d="3">Your email</div>
+              <div class="part thin" data-p="none" data-t="3" data-d="2">Sign out</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part" data-p="12" data-t="12" data-d="12">"Syncs" and how they work</div>
+              <div class="part thin" data-p="12" data-t="12" data-d="12">Tip: start one from a finished transfer</div>
+              <div class="part m" data-p="12" data-t="12" data-d="12">Sync card: name, apps, status, last check, Pause · Delete</div>
+              <div class="part m" data-p="12" data-t="12" data-d="12">Sync card (paused): Resume · Delete</div>
+              <div class="part m" data-p="12" data-t="12" data-d="12">Sync card (needs you): the message in place of the last check</div>
+              <div class="part thin" data-p="12" data-t="12" data-d="12">"Your plan allows 5 syncs."</div>
+            </div>
+          </div>
+          <div class="row ftr" data-p="none">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+          <div class="tabbar" data-p="show" data-t="none" data-d="none"><span>Home</span><span>Move</span><span>Syncs</span><span>Account</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Account ===================== -->
+    <section class="panel" role="tabpanel" id="panel-account" aria-labelledby="tab-account" hidden>
+      <p>Address <code>/account</code> (and <code>/account?premium=thanks</code> after paying). File: <code>app/src/pages/Account.tsx</code>.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="12" data-t="3" data-d="2">Logo</div>
+              <div class="part thin" data-p="none" data-t="6" data-d="5">Tabs</div>
+              <div class="part thin" data-p="none" data-t="none" data-d="3">Your email</div>
+              <div class="part thin" data-p="none" data-t="3" data-d="2">Sign out</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part thin accent" data-p="12" data-t="12" data-d="12">"Thank you!" after paying (sometimes)</div>
+              <div class="part" data-p="12" data-t="12" data-d="12">"Account" and your email <span class="src">break-all, so a long email wraps</span></div>
+              <div class="part l" data-p="12" data-t="12" data-d="6">Your plan and Premium buttons</div>
+              <div class="part l" data-p="12" data-t="12" data-d="6">Get the app <span class="src">lg:grid-cols-2</span></div>
+              <div class="part m" data-p="12" data-t="12" data-d="12">Links: Back up · Privacy · Terms <span class="src">each row 52px tall</span></div>
+              <div class="part" data-p="12" data-t="3" data-d="2">Sign out <span class="src">w-full sm:w-auto</span></div>
+              <div class="part m" data-p="12" data-t="12" data-d="12">Delete my account</div>
+            </div>
+          </div>
+          <div class="row ftr" data-p="none">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+          <div class="tabbar" data-p="show" data-t="none" data-d="none"><span>Home</span><span>Move</span><span>Syncs</span><span>Account</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Back up ===================== -->
+    <section class="panel" role="tabpanel" id="panel-export" aria-labelledby="tab-export" hidden>
+      <p>Address <code>/export</code>. Save playlists as a file. File: <code>app/src/pages/Export.tsx</code>.</p>
+      <div class="stage">
+        <div class="frame">
+          <div class="row hdr">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-p="12" data-t="3" data-d="2">Logo</div>
+              <div class="part thin" data-p="none" data-t="6" data-d="5">Tabs</div>
+              <div class="part thin" data-p="none" data-t="none" data-d="3">Your email</div>
+              <div class="part thin" data-p="none" data-t="3" data-d="2">Sign out</div>
+            </div>
+          </div>
+          <div class="row body">
+            <span class="gut l"></span><span class="gut r"></span>
+            <div class="grid" data-cols="12" data-overlay>
+              <div class="part" data-p="12" data-t="12" data-d="12">"Back up your music" and what the file is for</div>
+              <div class="part" data-p="12" data-t="12" data-d="12">
+                Settings card
+                <span class="src">sm:grid-cols-2</span>
+                <div class="grid tight" data-cols-p="1" data-cols-t="2" data-cols-d="2">
+                  <div class="part">From which app?</div><div class="part">File type</div>
+                </div>
+              </div>
+              <div class="part" data-p="8" data-t="9" data-d="10">"Pick playlists"</div>
+              <div class="part" data-p="4" data-t="3" data-d="2">Select all</div>
+              <div class="part" data-p="12" data-t="12" data-d="12">
+                Playlist covers
+                <span class="src">grid-cols-2 sm:grid-cols-3 lg:grid-cols-5</span>
+                <div class="grid tight" data-cols-p="2" data-cols-t="3" data-cols-d="5">
+                  <div class="part m">Liked Songs</div><div class="part m">Road Trip</div><div class="part m">Gym</div><div class="part m">Long name…</div><div class="part m">Chill</div>
+                </div>
+              </div>
+              <div class="part accent" data-p="12" data-t="4" data-d="3">Download backup</div>
+            </div>
+          </div>
+          <div class="row ftr" data-p="none">
+            <div class="grid tight" data-cols="12">
+              <div class="part thin" data-t="8" data-d="9">mix n match</div>
+              <div class="part thin" data-t="4" data-d="3">Privacy · Terms</div>
+            </div>
+          </div>
+          <div class="tabbar" data-p="show" data-t="none" data-d="none"><span>Home</span><span>Move</span><span>Syncs</span><span>Account</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
