@@ -1,0 +1,17 @@
+# Vercel reports each finished deployment to GitHub. When one succeeds, check the live site.
+name: Smoke test after deploy
+
+on:
+  deployment_status:
+
+jobs:
+  smoke:
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check the live site
+        run: node scripts/smoke-deploy.mjs "${{ github.event.deployment_status.environment_url }}"

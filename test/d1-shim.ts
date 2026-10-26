@@ -1,5 +1,6 @@
-// A tiny stand-in for Cloudflare D1 built on Node's built-in SQLite,
-// so the real SQL in our code can be tested without Cloudflare.
+// A tiny stand-in for the database (D1-style API) built on Node's built-in SQLite,
+// so the real SQL in our code can be tested without a live database.
+import type { Db } from "../src/db";
 import { readdirSync, readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 
@@ -47,5 +48,5 @@ export function createTestDb() {
     raw: db,
     counter,
   };
-  return d1 as unknown as D1Database & { raw: DatabaseSync; counter: { queries: number } };
+  return d1 as unknown as Db & { raw: DatabaseSync; counter: { queries: number } };
 }

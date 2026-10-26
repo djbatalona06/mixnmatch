@@ -6,10 +6,10 @@
 import { platformName } from "../adapters/registry";
 import type { User } from "../auth/session";
 import type { Env } from "../env";
-import type { JobSpec, Selection } from "../jobs/engine";
+import { initialState, type JobSpec, type Selection } from "../jobs/engine";
 import { limitsFor, upgradeHint } from "../plans";
 import { HttpError, json } from "../web";
-import { ACTIVE, startJobObject } from "./jobs";
+import { ACTIVE } from "./jobs";
 
 const DAY = 86400_000;
 const HOUR = 3600_000;
@@ -101,7 +101,7 @@ export async function deleteSync(env: Env, user: User, syncId: string): Promise<
 
 /**
  * Hourly cron: starts due syncs. Only cheap database work happens here (a handful of
- * queries for up to 20 syncs); the actual copying runs in each job's Durable Object.
+ * queries for up to 20 syncs); the actual copying runs in the job runner (src/jobs/runner.ts).
  * One sync per user per hour, and never while that user has a transfer running.
  */
 export async function runDueSyncs(env: Env, now = Date.now()): Promise<number> {
@@ -119,10 +119,13 @@ export async function runDueSyncs(env: Env, now = Date.now()): Promise<number> {
 
   const jobs = picked.map((s) => {
     const selection: Selection = { kind: "playlist", id: s.source_id, name: s.name, targetPlaylistId: s.dest_playlist_id };
-    return { sync: s, jobId: crypto.randomUUID(), selection };
+    const spec: JobSpec = { jobId: crypto.randomUUID(), userId: s.user_id, source: s.source, dest: s.dest, selections: [selection], syncId: s.id };
+    return { sync: s, spec, selection };
   });
   const rows = jobs.map((j) => ({
-    id: j.jobId,
+    id: j.spec.jobId,
+    run: JSON.stringify(j.spec),
+    first: JSON.stringify(initialState(j.spec)),
     u: j.sync.user_id,
     s: j.sync.source,
     d: j.sync.dest,
@@ -145,6 +148,12 @@ export async function runDueSyncs(env: Env, now = Date.now()): Promise<number> {
        SELECT j.value ->> 'id', 0, 'playlist', j.value ->> 'n', j.value ->> 'si', j.value ->> 'dp', j.value ->> 'dp'
        FROM json_each(?1) AS j`,
     ).bind(JSON.stringify(rows)),
+    // The job runner picks these up on its next cron call.
+    env.DB.prepare(
+      `INSERT INTO job_runs (job_id, spec, state, run_at)
+       SELECT j.value ->> 'id', j.value ->> 'run', j.value ->> 'first', ?2
+       FROM json_each(?1) AS j`,
+    ).bind(JSON.stringify(rows), now),
     // Guard: if a run never reports back, try again in an hour instead of every cron.
     env.DB.prepare(
       `UPDATE syncs SET next_run_at = ?2, last_job_id = (SELECT j.value ->> 'id' FROM json_each(?1) AS j WHERE j.value ->> 'sy' = syncs.id)
@@ -152,21 +161,10 @@ export async function runDueSyncs(env: Env, now = Date.now()): Promise<number> {
     ).bind(JSON.stringify(rows), now + HOUR),
   ]);
 
-  for (const j of jobs) {
-    const spec: JobSpec = {
-      jobId: j.jobId,
-      userId: j.sync.user_id,
-      source: j.sync.source,
-      dest: j.sync.dest,
-      selections: [j.selection],
-      syncId: j.sync.id,
-    };
-    await startJobObject(env, spec).catch((err) => console.error(`sync ${j.sync.id} did not start`, err));
-  }
   return jobs.length;
 }
 
-/** Called by the job's Durable Object when a sync run ends. */
+/** Called by the job runner when a sync run ends. */
 export async function finishSyncRun(env: Env, spec: JobSpec, status: "DONE" | "FAILED", reason: "auth" | "gone" | undefined, now = Date.now()) {
   const syncId = spec.syncId!;
   if (status === "FAILED") {

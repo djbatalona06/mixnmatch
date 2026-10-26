@@ -4,6 +4,7 @@ import type { Platform, Track } from "../adapters/types";
 import type { User } from "../auth/session";
 import type { Env } from "../env";
 import { insertSelections, insertTracks, selectionState, type JobSpec, type JobState, type Selection } from "../jobs/engine";
+import { cancelJobRun, startJobRun } from "../jobs/runner";
 import { limitsFor, upgradeHint } from "../plans";
 import { HttpError, json } from "../web";
 
@@ -56,11 +57,10 @@ export async function requireFreeSlot(env: Env, user: User): Promise<void> {
   }
 }
 
-/** Hands a job to its Durable Object; marks it FAILED if that does not work. */
-export async function startJobObject(env: Env, spec: JobSpec, state?: JobState): Promise<void> {
-  const stub = env.TRANSFER_JOB.get(env.TRANSFER_JOB.idFromName(spec.jobId)) as any;
+/** Hands a job to the runner; marks it FAILED if that does not work. */
+export async function startJob(env: Env, spec: JobSpec, state?: JobState): Promise<void> {
   try {
-    await stub.start(spec, state);
+    await startJobRun(env, spec, state);
   } catch (err) {
     await env.DB.prepare("UPDATE transfer_jobs SET status = 'FAILED', message = 'Could not start', finished_at = ?2 WHERE id = ?1")
       .bind(spec.jobId, Date.now())
@@ -118,7 +118,7 @@ export async function createJob(env: Env, user: User, body: CreateJobBody): Prom
   await insertSelections(env.DB, jobId, selections, source === "file");
   for (let i = 0; i < fileTracks.length; i++) await insertTracks(env.DB, jobId, i, 0, fileTracks[i]);
 
-  await startJobObject(env, { jobId, userId: user.id, source: source as Platform | "file", dest: dest as Platform, selections });
+  await startJob(env, { jobId, userId: user.id, source: source as Platform | "file", dest: dest as Platform, selections });
   return json({ id: jobId }, 201);
 }
 
@@ -189,9 +189,7 @@ export async function listJobItems(env: Env, user: User, jobId: string, url: URL
 export async function cancelJob(env: Env, user: User, jobId: string): Promise<Response> {
   const job = await ownedJob(env, user, jobId);
   if (!["QUEUED", "RUNNING", "WAITING"].includes(job.status)) throw new HttpError(409, "This transfer is not running");
-  const stub = env.TRANSFER_JOB.get(env.TRANSFER_JOB.idFromName(jobId)) as any;
-  await stub.cancel();
-  // In case the job object had nothing stored (e.g. it never started), stop it here too.
+  await cancelJobRun(env, jobId);
   await env.DB.prepare(
     `UPDATE transfer_jobs SET status = 'CANCELLED', message = 'Stopped by you.', updated_at = ?2, finished_at = ?2
      WHERE id = ?1 AND status IN ${ACTIVE}`,
@@ -241,6 +239,6 @@ export async function retryJob(env: Env, user: User, jobId: string, body: { incl
   )
     .bind(jobId, Date.now())
     .run();
-  await startJobObject(env, spec, state);
+  await startJob(env, spec, state);
   return json({ ok: true });
 }

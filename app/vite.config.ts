@@ -1,4 +1,4 @@
-// Builds the mix n match app into ../dist, which the Worker serves (see wrangler.jsonc).
+// Builds the mix n match app into ../dist, which Vercel serves (see vercel.json).
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";

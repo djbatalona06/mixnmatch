@@ -1,7 +1,8 @@
 node_modules/
-.wrangler/
-.dev.vars
+.env.local
+.env
+.data/
+.vercel/
 *.log
 test-results/
 dist/
-.data/
