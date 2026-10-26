@@ -5,7 +5,7 @@ export const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
   deezer: { name: "Deezer", color: "#a238ff" },
   youtube: { name: "YouTube Music", color: "#ff3347" },
   soundcloud: { name: "SoundCloud", color: "#ff7a1a" },
-  mock: { name: "Demo Music", color: "#f59e0b" },
+  mock: { name: "Demo Music", color: "#e3a047" },
   file: { name: "File upload", color: "#7aa7ff" },
 };
 

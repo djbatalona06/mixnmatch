@@ -10,12 +10,12 @@ const executablePath = process.env.CHROME_PATH ?? "/opt/pw-browsers/chromium";
 // `scale` shrinks the records so maskable icons keep them inside the safe circle (80%).
 const svg = (scale) => `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#0a0a0a"/>
+  <rect width="512" height="512" fill="#0b0a09"/>
   <g transform="translate(256 256) scale(${scale}) translate(-256 -256)">
-    <circle cx="200" cy="200" r="150" fill="#1a1a1a" stroke="#f5f5f5" stroke-width="18"/>
-    <circle cx="200" cy="200" r="34" fill="#f5f5f5"/>
-    <circle cx="312" cy="312" r="150" fill="#f59e0b"/>
-    <circle cx="312" cy="312" r="34" fill="#0a0a0a"/>
+    <circle cx="200" cy="200" r="150" fill="#1c1a18" stroke="#f5f3f0" stroke-width="18"/>
+    <circle cx="200" cy="200" r="34" fill="#f5f3f0"/>
+    <circle cx="312" cy="312" r="150" fill="#e3a047"/>
+    <circle cx="312" cy="312" r="34" fill="#0b0a09"/>
   </g>
 </svg>`;
 

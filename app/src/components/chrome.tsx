@@ -18,7 +18,7 @@ const TABS = [
 
 function Logo() {
   return (
-    <Link to="/" className="flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap text-lg font-bold tracking-tight">
+    <Link to="/" className="flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap text-lg font-semibold tracking-tight">
       <img src="/favicon.svg" alt="" className="h-7 w-7" />
       mix n match
     </Link>
@@ -42,7 +42,7 @@ function useOnline() {
 function OfflineBar() {
   if (useOnline()) return null;
   return (
-    <div role="status" id="offline" className="flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center text-sm font-semibold text-bg">
+    <div role="status" id="offline" className="flex items-center justify-center gap-2 bg-accent px-4 py-2 text-center text-sm font-semibold text-bg">
       <WifiOff size={16} aria-hidden /> You're offline. mix n match needs the internet to talk to your music apps.
     </div>
   );
@@ -54,7 +54,7 @@ function Toasts() {
   return (
     <div
       role="status"
-      className="toast fixed inset-x-4 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 mx-auto max-w-md rounded-xl border border-line bg-raised px-4 py-3 text-center text-sm shadow-2xl md:bottom-6"
+      className="toast fixed inset-x-4 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 mx-auto max-w-md rounded-xl border border-line bg-raised px-4 py-3 text-center text-sm shadow-lift md:bottom-6"
     >
       {message}
     </div>

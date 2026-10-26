@@ -1,4 +1,4 @@
-import "@fontsource-variable/inter";
+import "@fontsource-variable/geist";
 import "./index.css";
 import "./store/install";
 import { StrictMode } from "react";

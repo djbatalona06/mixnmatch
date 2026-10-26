@@ -42,7 +42,7 @@ This one file holds the six planning parts for the app (PRD, TRD, App Flow, UI/U
 | State | Zustand (`session` store for "who am I", `toast` store) | Small, with no extra setup code. |
 | Routing | React Router v7 (the skill's default is v6; v7 fixes a security warning in v6 and works the same for this app) | Keeps the same paths as the old pages (A-06). |
 | Icons | Lucide React | One consistent icon set. |
-| Font | Inter, bundled with the app (`@fontsource-variable/inter`) | Works offline, with no outside font server. |
+| Font | Geist, bundled with the app (`@fontsource-variable/geist`) | Works offline, with no outside font server. |
 | Server / DB | **Unchanged API**: one Vercel function (`api/[...path].ts`) + Turso + the cron job runner | The skill's default is Supabase. We keep the server we already have, because it holds every account, key and sync. |
 | Hosting | Vercel serves the built app from `dist/` next to `/api/*` | One URL, so cookies and sign-in stay the same. No CORS. |
 
@@ -77,14 +77,14 @@ anything else      "Lost the beat" page
 
 | Token | Value |
 |---|---|
-| Background | `#0a0a0a` |
-| Surface / raised | `#141414` / `#1a1a1a` |
-| Border | `#262626` |
-| Accent (buttons, focus, progress) | amber `#f59e0b`, with `#0a0a0a` text on top |
-| Text / muted | `#f5f5f5` / `#a3a3a3` |
-| Good / warn / bad | `#10b981` / `#f59e0b` / `#f87171` |
+| Background | `#0b0a09` |
+| Surface / raised | `#141311` / `#1c1a18` |
+| Border | `#292623` |
+| Accent (buttons, focus, progress) | amber `#e3a047`, with `#0b0a09` text on top |
+| Text / muted | `#f5f3f0` / `#a8a29a` |
+| Good / warn / bad | `#46be8c` / `#e3a047` / `#ef7b72` |
 | Shapes | cards `rounded-xl`, buttons and pills `rounded-full` |
-| Font | Inter |
+| Font | Geist |
 
 - Service colours stay as small dots (Spotify green, TIDAL white, …) so people still recognise their apps.
 - **Phone:** bottom tab bar, header with only the logo, content padded clear of the notch and home bar.

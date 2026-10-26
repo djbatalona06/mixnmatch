@@ -342,7 +342,7 @@ export default function Results() {
         more = page.hasMore;
       }
     }
-    if (!rows.length) return toast("Every song matched — nothing to download.");
+    if (!rows.length) return toast("Every song matched, so there is nothing to download.");
     const tracks = rows.map((r) => ({ title: r.src_title, artist: r.src_artist, album: r.src_album ?? undefined, isrc: r.src_isrc ?? undefined }));
     downloadFile("mixnmatch-songs-to-check.csv", toCsv([{ name: "Songs to check", tracks }]), "text/csv");
   }
@@ -376,7 +376,7 @@ export default function Results() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">{job.title}</h1>
+          <h1 className="break-words text-2xl font-semibold tracking-tight sm:text-3xl">{job.title}</h1>
           <p className="text-muted">
             {platformName(job.source)} → {platformName(job.dest)}
           </p>
@@ -396,7 +396,7 @@ export default function Results() {
       <Card className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <strong id="phase">{phase}</strong>
-          <span className="text-muted" id="percent">
+          <span className="tabular-nums text-muted" id="percent">
             {percent}%
           </span>
         </div>
@@ -509,7 +509,7 @@ export default function Results() {
         {fixing ? (
           <div className="space-y-4">
             <p className="text-sm text-muted">
-              Original: {fixing.src_title} — {fixing.src_artist}
+              Original: {fixing.src_title} by {fixing.src_artist}
             </p>
             <form
               className="flex gap-2"

@@ -26,7 +26,7 @@ function PlanCard({ me }: { me: Me }) {
         <h2 className="text-lg font-semibold">Your plan: {premium ? "Premium" : "Free"}</h2>
         <Pill tone={premium ? "ok" : ""}>{premium ? "Active" : "Free plan"}</Pill>
       </div>
-      <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-300">
+      <ul className="list-disc space-y-1 pl-5 text-sm text-fg/80">
         <li>{plural(me.limits.syncs, "playlist")} kept in sync</li>
         <li>{plural(me.limits.activeTransfers, "transfer")} at the same time</li>
         <li>Up to {me.limits.fileTracks.toLocaleString()} songs per uploaded file</li>

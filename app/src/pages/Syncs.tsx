@@ -1,7 +1,7 @@
 // Syncs: playlists kept copied once a day. Started from a finished transfer ("Keep in sync").
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Button, Card, Notice, PageTitle, Pill, PlatformDot, Spinner } from "../components/ui";
+import { Button, Card, EmptyState, Notice, PageTitle, Pill, PlatformDot, Skeleton } from "../components/ui";
 import { api } from "../lib/api";
 import { formatDate, plural } from "../lib/format";
 import { platformName } from "../lib/platforms";
@@ -18,7 +18,7 @@ function lastRun(sync: Sync): string {
   if (sync.message) return sync.message;
   if (!sync.last_run_at) return `First check ${formatDate(sync.next_run_at)}`;
   const added = sync.last_added ? `added ${plural(sync.last_added, "song")}` : "nothing new";
-  return `Last checked ${formatDate(sync.last_run_at)} — ${added}`;
+  return `Last checked ${formatDate(sync.last_run_at)}. ${added}`;
 }
 
 export default function Syncs() {
@@ -59,16 +59,19 @@ export default function Syncs() {
       </Notice>
       <div id="syncs" className="space-y-3">
         {data === null ? (
-          <p className="text-muted">
-            <Spinner /> Loading…
-          </p>
+          <div className="space-y-3" role="status" aria-label="Loading">
+            <Skeleton className="h-24 w-full" />
+          </div>
         ) : !data.syncs.length ? (
-          <p className="text-muted">
-            No syncs yet. You can keep {plural(data.limit, "playlist")} in sync.{" "}
-            <Link to="/transfer" className="font-semibold text-accent">
-              Move a playlist
-            </Link>
-          </p>
+          <EmptyState
+            action={
+              <Link to="/transfer" className="font-semibold text-accent hover:text-accent-hover">
+                Move a playlist
+              </Link>
+            }
+          >
+            No syncs yet. You can keep {plural(data.limit, "playlist")} in sync.
+          </EmptyState>
         ) : (
           data.syncs.map((sync) => {
             const [tone, label] = SYNC_PILL[sync.status] ?? ["", sync.status];
