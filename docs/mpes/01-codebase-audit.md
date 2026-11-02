@@ -3,7 +3,7 @@
 > **In plain words**
 > We read every part of mix n match: the app you tap, the server, the database, the tests and the deploy setup.
 > It is in good shape: 115 tests pass, the code type-checks, the app builds, and the parts that ship to users have **0 known security holes**.
-> We found **one setting that could let anyone sign in as anyone** if it is left on in the live site, **one build step that could change the live database from an unfinished pull request**, some old Cloudflare files and a test key saved in git (removed in this change), and docs that still describe the old Cloudflare setup.
+> The biggest finding: **Vercel has refused every deploy since the move to Vercel**, because the free plan does not allow the every-minute job. We also found **one setting that could let anyone sign in as anyone** if it is left on in the live site, **one build step that could change the live database from an unfinished pull request**, some old Cloudflare files and a test key saved in git (removed in this change), and docs that still describe the old Cloudflare setup.
 
 **Audited:** `main` at `0e734e5` · 2 Nov 2026 · Everything below was read in the code or run in this session. Nothing is assumed.
 
@@ -68,6 +68,7 @@ Severity: **P0** fix before real users · **P1** fix before the next release · 
 
 | ID | Sev | Finding | Evidence | Status |
 |---|---|---|---|---|
+| **AUD-00** | **P0** | **Nothing has deployed since the move to Vercel.** Every Vercel build of the last 8 commits, including the production builds of `main` (PRs #4–#7), ends in ERROR: *"Hobby accounts are limited to daily cron jobs. This cron expression (`* * * * *`) would run more than once per day."* The live site, if any, is an older build | Vercel deployments `dpl_72ayjANv…` (main, `0e734e5`), `dpl_719bpNzG…` (this PR); `vercel.json` `crons` | 📝 Roadmap R-00 (owner decision) |
 | **AUD-01** | **P0** | **`DEV_MODE=1` in production would let anyone sign in as anyone.** With it on, `POST /api/auth/request` returns the sign-in link to whoever asked, for any email. Nothing stops it being on in production; only the README says to turn it off. This session could not reach the live site to check (network blocked) | `src/auth/magic-link.ts:43-45` | 📝 Roadmap R-01. A warning was added to the live smoke test (Demo Music listed = test settings are on) |
 | **AUD-02** | **P1** | **Preview builds may change the live database.** `npm run build` runs `scripts/migrate.mjs` on every Vercel build, including pull-request previews. If the Turso variables are shared with the Preview environment, an unmerged migration is applied to production | `package.json` `build`, `scripts/migrate.mjs` | 📝 Roadmap R-02 |
 | **AUD-03** | **P1** | **A test encryption key and old Cloudflare files were saved in git.** `.dev.vars` (with a 32-byte `TOKEN_KEY`) and 30 `.wrangler/state` SQLite files were tracked. The project moved to Vercel, so nothing uses them | `git ls-files` | ✅ **Fixed in this change**: untracked and added to `.gitignore`. The key is still in git history, so it must never be used for a real environment |
