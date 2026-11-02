@@ -25,7 +25,7 @@
 | **FreeYourMusic** | Free: **300 songs, or 600 after a free email sign-up**, no card. Premium Quarterly **€14.99 every 3 months** (€5.00/mo). Premium Yearly **€39.99 a year** (€3.33/mo). Lifetime **€199.99 once**. Premium includes unlimited transfers, **Auto-Sync**, **Cloud Backup**, all platforms, multi-account. **Rematch** ("fix imperfect matches in one tap") is free on every plan. Refunds within 3 days. | ✅ Yes | https://freeyourmusic.com/pricing (read 26 Oct 2026) |
 | FreeYourMusic (more) | Moves **albums and followed artists**; native desktop and mobile apps | ❌ Unconfirmed (not on the pricing page) | search snippets during planning |
 | **Soundiiz** | About **48 services**. Free: one playlist at a time, **up to 200 songs per playlist**. Paid: batch transfers, auto-sync, an AI playlist maker | ❌ Unconfirmed | search snippets during planning; check https://soundiiz.com/premium |
-| **TuneMyMusic** | Import from pasted **text, a file or a playlist URL**. Auto-sync **daily, weekly or monthly at a chosen hour**. Download a **CSV of missing songs**. Backup. AI playlist maker | ❌ Unconfirmed | search snippets during planning; check https://www.tunemymusic.com/pricing |
+| **TuneMyMusic** | Import from pasted **text, a file or a playlist URL**. Auto-sync **daily, weekly or monthly at a chosen hour**. Download a **CSV of missing songs**. Backup. AI playlist maker | ❌ Unconfirmed | search snippets during planning; the address `https://www.tunemymusic.com/pricing` returned **404** on 2 Nov 2026 (Firecrawl); find the real pricing page |
 | **SongShift** | Focused on Apple devices (iPhone app) | ❌ Unconfirmed | search snippets during planning; check https://songshift.com |
 
 **What mix n match already has** (checked in the code, not guessed):
@@ -80,7 +80,7 @@
 | R-1 | A sync can run **daily, weekly or monthly** | The sync card shows the choice, and the next run date follows it |
 | R-2 | You choose the **hour** a sync runs, in your own time zone | "Runs every Monday at 07:00" shows your local time; the server stores UTC |
 | R-3 | Syncs **into YouTube** stay off (as in v1.2), and no option can run a sync more than once a day | Checked by a test |
-| R-4 | You can **paste** songs, one per line ("Artist - Title" or "Title - Artist" with a tab), up to the plan's `fileTracks` limit (500 free) | Pasting 3 lines shows "Found 1 playlist with 3 songs", like a file |
+| R-4 | You can **paste** songs, one per line ("Artist - Title" or "Title - Artist" with a tab), up to the plan's `fileTracks` limit (5,000 free, 20,000 Premium; `src/plans.ts`) | Pasting 3 lines shows "Found 1 playlist with 3 songs", like a file |
 | R-5 | Pasted text never leaves the phone except as the song list of the transfer | Same path as a file upload; nothing new is stored |
 | R-6 (v1.3.1) | You can pick **Saved albums** as a source on Spotify, TIDAL and Deezer, and they are saved as albums on the other app | An album that is found is saved; one that is not shows under "Not found" with its artist and title |
 

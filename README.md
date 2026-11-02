@@ -90,6 +90,7 @@ Everything below is for the person who sets up, changes or hosts the app. If you
 | Folder | What is inside |
 |---|---|
 | `docs/` | The plans for the app. Start here to learn how it was designed. |
+| `docs/mpes/` | The rulebook every MixNMatch product follows (safety, accessibility, speed, tests) and the to-do list that comes from it. |
 | `app/` | The app people see (React). `app/src/pages/` has one file per screen. |
 | `scripts/` | Helpers, like the one that draws the app icons. |
 | `src/` | The code that runs on the server. |

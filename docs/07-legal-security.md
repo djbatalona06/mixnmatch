@@ -19,13 +19,13 @@ mix n match never hosts, streams, downloads or copies audio. It only reads and w
 
 | Defence | Where |
 |---|---|
-| Keys encrypted with AES-256-GCM; key in a Worker secret, never in the database; ciphertext bound to `user:service` so it can't be swapped between rows | `src/crypto.ts`, `src/connections.ts` |
+| Keys encrypted with AES-256-GCM; key in a Vercel environment secret, never in the database; ciphertext bound to `user:service` so it can't be swapped between rows | `src/crypto.ts`, `src/connections.ts` |
 | OAuth Authorization Code + **PKCE** + one-time `state` (10 min) | `src/index.ts` |
 | No passwords anywhere; magic-link tokens and session ids stored only as SHA-256 hashes | `src/auth/` |
 | Session cookie `HttpOnly; Secure; SameSite=Lax` | `src/auth/session.ts` |
 | CSRF: changing requests need `X-Requested-With` + same `Origin` | `src/web.ts` |
 | Sign-in email rate limit: 5/hour per email or IP | `src/auth/magic-link.ts` |
-| Strict Content-Security-Policy, no inline scripts, `frame-ancestors 'none'`; fonts bundled (no outside font server) | `app/public/_headers` |
+| Strict Content-Security-Policy, no inline scripts, `frame-ancestors 'none'`; fonts bundled (no outside font server) | `vercel.json` (`headers`) |
 | All page text inserted as text, never as HTML (XSS-safe): React escapes everything, and the app never uses `dangerouslySetInnerHTML` | `app/src/**` |
 | Pagination cursors only followed when they point at the service's own API (and Deezer cursors are stripped of tokens) | adapters |
 | Upload validation: size, song count (5,000), field lengths, ISRC format | `src/routes/jobs.ts` |

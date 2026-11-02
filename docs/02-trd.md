@@ -18,20 +18,20 @@ The original plan named microservices, RabbitMQ/SQS, PostgreSQL, Redis and Auth0
 
 | Original | mix n match |
 |---|---|
-| API Gateway + services | One Worker with route functions |
-| RabbitMQ / SQS | Durable Object alarms |
-| PostgreSQL | D1 |
-| Redis cache | `match_cache` table in D1 |
+| API Gateway + services | One Vercel function with route functions (`api/[...path].ts` → `src/index.ts`) |
+| RabbitMQ / SQS | `job_runs` table + Vercel Cron every minute (`src/jobs/runner.ts`) |
+| PostgreSQL | Turso (libSQL / SQLite) |
+| Redis cache | `match_cache` table in Turso |
 | Auth0 / Cognito | Magic links + hashed sessions |
-| KMS | Worker secret `TOKEN_KEY` (AES-256-GCM) |
+| KMS | Vercel environment secret `TOKEN_KEY` (AES-256-GCM) |
 
-## Free-plan limits we design around
-| Limit (per run) | Free plan | How we stay under it |
+## Hosting limits we design around
+| Limit | Value | How we stay under it |
 |---|---|---|
-| CPU time | 10 ms | Small steps; network waiting does not count |
-| Outside requests | 50 | ≤ 20 per step (10 songs × ISRC + text search) |
-| D1 queries | 50 | Bulk SQL with `json_each`; tests assert < 15 per step |
-| D1 writes | 100,000 rows/day | ~2 writes per song |
+| Function run time | 300 s (`vercel.json`) | Each cron call runs steps for at most 150 s (`CRON_BUDGET_MS`) |
+| Cron frequency | Every minute on Vercel Pro (once a day on Hobby) | Transfers need Pro; see README "Limits" |
+| Request body | 4.5 MB per request on Vercel | File uploads are capped by `LIMITS.*.bodyBytes` (Premium cap to be lowered below 4.5 MB, MPES roadmap R-10) |
+| Database queries per step | Kept small | Bulk SQL with `json_each`; tests assert < 15 per step |
 
 ## Music service APIs
 | Service | Login | Notes |
