@@ -32,7 +32,7 @@ There is no "export to another app" button between music services. People who sw
 ## Non-functional requirements
 - **Speed:** a 1,000-song playlist finishes in under 5 minutes when the services are not rate-limiting us (YouTube excepted — see quota).
 - **Reliability:** obey "slow down" (HTTP 429 + `Retry-After`), pause and resume automatically, never add a song twice.
-- **Cost:** runs on Cloudflare's **free** plan.
+- **Cost:** runs on Vercel (Pro, for the every-minute job runner) and Turso's free plan.
 - **Usability:** one guided path: Connect → From → To → Choose → Review → Watch → Results.
 - **Privacy:** see [07-legal-security.md](07-legal-security.md).
 

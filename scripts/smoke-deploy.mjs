@@ -54,6 +54,11 @@ await check("the API answers with JSON", async () => {
   expect(res.status === 200, `status ${res.status}`);
   const body = await res.json();
   expect(Array.isArray(body.platforms), "no platform list");
+  // MPES SEC-07: Demo Music only shows when ENABLE_MOCK=1. On a real site that usually means
+  // DEV_MODE is on too, and DEV_MODE hands out sign-in links to anyone. Warn, don't fail (yet: roadmap R-01).
+  if (body.platforms.some((p) => p.id === "mock")) {
+    console.log("⚠ Demo Music is switched on here. If this is the real site, turn off ENABLE_MOCK and DEV_MODE in Vercel.");
+  }
 });
 
 await check("account details need a sign-in", async () => {

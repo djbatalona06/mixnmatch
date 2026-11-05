@@ -15,13 +15,13 @@
 ## Phase 2 — Go live (needs the owner's accounts)
 | # | Task | Who |
 |---|---|---|
-| 2.1 | `npx wrangler d1 create mixnmatch`, paste id into `wrangler.jsonc` | Owner or Claude with a Cloudflare API token |
-| 2.2 | `npx wrangler secret put TOKEN_KEY` (32 random bytes, base64) | Owner |
-| 2.3 | `npm run deploy` | Either |
+| 2.1 | Import the repo in Vercel and add **Turso** from the Vercel Marketplace (sets `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`). Give **Preview** its own database, or none (MPES R-02) | Owner |
+| 2.2 | Set `TOKEN_KEY` and `CRON_SECRET` (each 32 fresh random bytes, base64) in Vercel → Settings → Environment Variables. Never reuse a key that was ever in git | Owner |
+| 2.3 | Deploy (push to `main`), then `npm run smoke:deploy -- https://<site>` | Either |
 | 2.4 | Spotify developer app → redirect `https://<site>/api/callback/spotify`; add your account to the 5 allowed users | Owner |
 | 2.5 | TIDAL, Google Cloud (YouTube Data API v3), Deezer developer apps, same redirect pattern | Owner |
 | 2.6 | **Verify each adapter with a real account** (paths were built from docs) and fix any differences | Claude |
-| 2.7 | Buy/attach a domain, verify it in Resend, set `RESEND_API_KEY` + `EMAIL_FROM`, set `DEV_MODE=0` | Owner |
+| 2.7 | Buy/attach a domain, verify it in Resend, set `RESEND_API_KEY` + `EMAIL_FROM`, remove `DEV_MODE` and `ENABLE_MOCK` from Production (MPES R-01) | Owner |
 | 2.8 | Have a lawyer review privacy + terms; add a contact email | Owner |
 
 ## Phase 3 — Better results (v1.1) ✅ built → spec: [08-spec-v1.1.md](08-spec-v1.1.md)
